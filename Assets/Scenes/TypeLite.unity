@@ -328,54 +328,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &267221414
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 267221415}
-  - component: {fileID: 267221416}
-  m_Layer: 0
-  m_Name: ChatSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &267221415
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 267221414}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 857.95996, y: 743.08, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &267221416
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 267221414}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39a6fea861ccd5241af0acc05199a0f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChatSystem
-  database: {fileID: 11400000, guid: d7af450b77a51ed4bbb0a784114ef90d, type: 2}
-  chatRail: {fileID: 815626185}
-  presetLibrary: {fileID: 11400000, guid: fe4e35ffd25257842b688af8a017fd40, type: 2}
-  waveEntryType: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -750,58 +702,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &490608500
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 490608502}
-  - component: {fileID: 490608501}
-  m_Layer: 0
-  m_Name: ChatStreamController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &490608501
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 490608500}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4f9293f09bba8c499725db5939d8bc8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChatStreamController
-  database: {fileID: 11400000, guid: d7af450b77a51ed4bbb0a784114ef90d, type: 2}
-  chatRail: {fileID: 815626185}
-  presetA: {fileID: 11400000, guid: dcdd29ddf8c4c8a488c2ba3f558b017f, type: 2}
-  presetB: {fileID: 11400000, guid: 3e417d1ca5db73d47967244a357774dd, type: 2}
-  presetC: {fileID: 11400000, guid: cc6826aa4e846fa4cb15bb7bc25522aa, type: 2}
-  autoStreamInterval: 2
-  enableAutoStream: 1
-  defaultConditions: []
---- !u!4 &490608502
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 490608500}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.4566, y: 0, z: 2.54912}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &504259312
 GameObject:
   m_ObjectHideFlags: 0
@@ -1405,10 +1305,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbf43757c79bfa845a5055c26118bb98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatRail
-  scrollRect: {fileID: 846867005}
-  content: {fileID: 1874222590}
+  contentRoot: {fileID: 0}
+  poolRoot: {fileID: 0}
   entryPrefab: {fileID: 7587269143477995467, guid: 5afeab3c4c0c40644b200ba05bb11df9, type: 3}
   maxEntries: 8
+  consumeBudgetPerFrame: 6
+  preloadPool: 40
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -2402,53 +2304,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1742363784
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1742363785}
-  - component: {fileID: 1742363786}
-  m_Layer: 0
-  m_Name: LiveSessionManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1742363785
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1742363784}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 857.95996, y: 743.08, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1742363786
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1742363784}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de80dc9ea2176504daf067450f857d4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LiveSession
-  chat: {fileID: 267221416}
-  autoStartTestSequence: 1
-  testSequenceDelay: 1
 --- !u!1 &1755895994
 GameObject:
   m_ObjectHideFlags: 0
@@ -2958,6 +2813,7 @@ MonoBehaviour:
   liveKey: 49
   liveStartKey: 51
   endChatKey: 54
+  _init: 0
   welcomeMessages:
   - "\uC548\uB155! \uC624\uB298\uB3C4 \uC640\uC918\uC11C \uACE0\uB9C8\uC6CC!"
   - "\uCC44\uD305\uC740 \uD734\uB300\uD3F0 \uD654\uBA74\uC5D0 \uC62C\uB77C\uC624\uB294
@@ -3026,6 +2882,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f368fa8031ed2a4e9f5bb83b4a60f8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatEntryView
+  nameText: {fileID: 0}
+  bodyText: {fileID: 0}
+  amountText: {fileID: 0}
+  emoteImage: {fileID: 0}
+  amountRoot: {fileID: 0}
 --- !u!1 &1964640621
 GameObject:
   m_ObjectHideFlags: 0
@@ -3316,52 +3177,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2063279638}
   m_CullTransparentMesh: 1
---- !u!1 &2087987989
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2087987990}
-  - component: {fileID: 2087987991}
-  m_Layer: 0
-  m_Name: LiveStreamBootstrap
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2087987990
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2087987989}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2087987991
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2087987989}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44a4233f009c45e4b85e7fb62e4959ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LiveStreamBootstrap
-  liveUI: {fileID: 1438907182}
-  testLauncher: {fileID: 1912787948}
 --- !u!1 &2133458278
 GameObject:
   m_ObjectHideFlags: 0
@@ -3532,7 +3347,3 @@ SceneRoots:
   - {fileID: 1731713240}
   - {fileID: 9155967952251032124}
   - {fileID: 504259316}
-  - {fileID: 2087987990}
-  - {fileID: 490608502}
-  - {fileID: 1742363785}
-  - {fileID: 267221415}
