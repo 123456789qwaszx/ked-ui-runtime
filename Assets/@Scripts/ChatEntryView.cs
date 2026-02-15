@@ -1,16 +1,3 @@
-// ChatEntryView.cs (Single-root version)
-// - Left/Right 분리 제거
-// - side에 따라 정렬(좌/우)만 바꿈
-// - kind에 따라 배지/금액/이름 노출 제어
-//
-// 전제:
-// - Content 쪽에 VerticalLayoutGroup이 있고
-// - 각 엔트리(프리팹 루트)에 LayoutElement(선택)가 붙어 있으면 더 안정적
-//
-// 주의:
-// - 정렬은 "EntryRoot의 앵커/피벗 + 내부 정렬 그룹"으로 처리.
-// - 가장 안전한 방식은 EntryRoot 안에 AlignmentRoot를 두고, 그 RectTransform을 좌/우로 붙이는 것.
-
 using System;
 using TMPro;
 using UnityEngine;

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d0522ecae406d64cab1c12af7084a77, type: 3}
+  m_Name: ChatPreset_A
+  m_EditorClassIdentifier: Assembly-CSharp::ChatPresetSO
+  presetType: 0
+  description: "\uD3C9\uC628 (CHEER \uC911\uC2EC)"
+  kindWeights:
+  - kind: 0
+    weightMultiplier: 1.5
+  - kind: 1
+    weightMultiplier: 1
+  - kind: 2
+    weightMultiplier: 2
+  allowToxicRefrain: 0
+  allowMyMsgHighlight: 0
+  myMsgRatio: 0
