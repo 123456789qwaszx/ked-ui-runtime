@@ -77,16 +77,28 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void PushSignals(ChatSignals signals)
     {
-        // 최신 신호를 OR로 누적 (한 틱에서 여러 이벤트 들어올 수 있으니)
-        _signals = new ChatSignals(_signals.flags | signals.flags, signals.donationAmount);
+        // 즉시 boost 주입 (여러 번 와도 최대 1로 clamp)
+        if (signals.Has(ChatSignalFlags.IdolSpoke))
+            _rt.idolSpokeBoost = 1f;
+
+        if (signals.Has(ChatSignalFlags.DonationHappened))
+            _rt.donationBoost = 1f;
+
+        if (signals.Has(ChatSignalFlags.BigDonationHappened))
+            _rt.bigDonationBoost = 1f;
+
+        if (signals.Has(ChatSignalFlags.SystemNotice))
+            _rt.systemBoost = 1f;
+
+        if (signals.Has(ChatSignalFlags.ISpoke))
+            _rt.myMsgBoost = 1f;
+
+        // donation amount 같은 건 sampler가 참고할 수 있게 별도 저장해도 됨
     }
 
     private void Update()
     {
         if (!_running || !profile) return;
-
-        // Tick: signals를 넘기고, tick 끝나면 소비
-        _core.Tick(profile, _rt, Time.deltaTime, _queue /*, _signals */);
-        _signals = default;
+        _core.Tick(profile, _rt, Time.deltaTime, _queue);
     }
 }

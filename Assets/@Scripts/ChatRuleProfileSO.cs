@@ -67,6 +67,21 @@ public sealed class ChatRuleProfileSO : ScriptableObject
     [Tooltip("후원 최대 빈도 (초당) - 0이면 제한 없음")]
     [Range(0f, 1f)]
     public float maxDonateFrequency = 0.2f;
+    
+    [Header("E. Signal Response (신호 반응)")]
+    [Range(0f, 5f)] public float idolSpokeWeightMul = 2.0f;
+    [Range(0f, 5f)] public float donationWeightMul = 2.5f;
+    [Range(0f, 5f)] public float bigDonationWeightMul = 3.5f;
+    [Range(0f, 5f)] public float systemWeightMul = 2.0f;
+    [Range(0f, 5f)] public float myMsgWeightMul = 2.0f;
+
+    [Tooltip("신호 반응이 유지되는 시간(초)")]
+    public float signalHoldSeconds = 2.0f;
+
+    [Tooltip("신호 반응이 감쇠되는 속도(초당)")]
+    public float signalDecayPerSec = 1.2f;
+    
+    
 
     [System.Serializable]
     public struct KindCooldown

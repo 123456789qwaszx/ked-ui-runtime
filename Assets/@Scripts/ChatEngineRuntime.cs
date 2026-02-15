@@ -21,6 +21,13 @@ public sealed class ChatEngineRuntime
 
     // no-repeat
     public IntRingBuffer recentTextIds;
+    
+    // ===== Signal impulses (짧게 유지되는 힘) =====
+    public float idolSpokeBoost;      // 0..1
+    public float donationBoost;       // 0..1
+    public float bigDonationBoost;    // 0..1
+    public float systemBoost;         // 0..1
+    public float myMsgBoost;          // 0..1
 
     public ChatEngineRuntime(int kindCount, int noRepeatWindow)
     {
@@ -51,5 +58,11 @@ public sealed class ChatEngineRuntime
         if (recentTextIds == null) recentTextIds = new IntRingBuffer(noRepeatWindow);
         recentTextIds.Resize(noRepeatWindow);
         recentTextIds.Clear();
+        
+        idolSpokeBoost = 0f;
+        donationBoost = 0f;
+        bigDonationBoost = 0f;
+        systemBoost = 0f;
+        myMsgBoost = 0f;
     }
 }

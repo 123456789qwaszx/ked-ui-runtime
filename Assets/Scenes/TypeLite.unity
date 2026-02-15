@@ -1305,11 +1305,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbf43757c79bfa845a5055c26118bb98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatRail
-  contentRoot: {fileID: 0}
-  poolRoot: {fileID: 0}
+  contentRoot: {fileID: 1874222590}
+  poolRoot: {fileID: 1478504792}
   entryPrefab: {fileID: 7587269143477995467, guid: 5afeab3c4c0c40644b200ba05bb11df9, type: 3}
-  maxEntries: 8
-  consumeBudgetPerFrame: 6
+  maxEntries: 120
+  consumeBudgetPerFrame: 8
   preloadPool: 40
 --- !u!1 &832575517
 GameObject:
@@ -1394,6 +1394,7 @@ RectTransform:
   - {fileID: 695560257}
   - {fileID: 990826053}
   - {fileID: 522811553}
+  - {fileID: 1478504792}
   m_Father: {fileID: 815626184}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2074,6 +2075,54 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1404630324
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1404630325}
+  - component: {fileID: 1404630326}
+  m_Layer: 0
+  m_Name: ChatEngine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1404630325
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1404630324}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -273.82544, y: 442.38565, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1404630326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1404630324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c994a7a56acd6554da4c42131e21e55e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChatEngine
+  profile: {fileID: 0}
+  contentDb: {fileID: 0}
+  rail: {fileID: 0}
+  autoStart: 1
 --- !u!1 &1411811292
 GameObject:
   m_ObjectHideFlags: 0
@@ -2201,6 +2250,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveUIRoot
   chatRail: {fileID: 815626185}
+--- !u!1 &1478504791
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1478504792}
+  m_Layer: 5
+  m_Name: PoolRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1478504792
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1478504791}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 846867004}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1505517351
 GameObject:
   m_ObjectHideFlags: 0
@@ -2886,7 +2970,6 @@ MonoBehaviour:
   bodyText: {fileID: 0}
   amountText: {fileID: 0}
   emoteImage: {fileID: 0}
-  amountRoot: {fileID: 0}
 --- !u!1 &1964640621
 GameObject:
   m_ObjectHideFlags: 0
@@ -3347,3 +3430,4 @@ SceneRoots:
   - {fileID: 1731713240}
   - {fileID: 9155967952251032124}
   - {fileID: 504259316}
+  - {fileID: 1404630325}

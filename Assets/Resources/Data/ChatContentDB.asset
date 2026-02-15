@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9ec0e1e71f2c92489a72f925cf96632, type: 3}
+  m_Name: ChatContentDB
+  m_EditorClassIdentifier: Assembly-CSharp::ChatContentDBSO
+  viewerNames:
+  - Kohaku
+  - Amber
+  - Ayame
+  - Iris
+  - Noya
+  - Seina
+  - "\uB77C\uBE44"
+  - "\uC624\uB298\uB3C4\uBD04"
+  - "\uC5EC\uC6B0\uC2E0\uC774\uAC8C\uC784\uC744\uD55C\uB2E4"
+  - "\u314B\u314B\u314B\u314B"
+  emotes:
+  - {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  textBuckets:
+  - kind: 0
+    flavor: 1
+    texts:
+    - "\u314B\u314B\u314B\u314B\u314B"
+  - kind: 0
+    flavor: 2
+    texts:
+    - "\u3139\u3147 \uAC10\uB2E4\uC0B4\uC774"
+  - kind: 1
+    flavor: 0
+    texts:
+    - "\uC624\uB298 \uBC29\uC1A1 \uB808\uC804"
+  - kind: 2
+    flavor: 0
+    texts:
+    - "\uACE0\uB9C8\uC6CC\uC694! \uC624\uB298 \uC9C4\uC9DC \uD589\uBCF5\uD574\uC694!!"
+  donationAmounts:
+  - amount: 1000
+    weight: 5
+  - amount: 5000
+    weight: 3
+  - amount: 10000
+    weight: 2
+  - amount: 50000
+    weight: 0.6
+  - amount: 100000
+    weight: 0.3

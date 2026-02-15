@@ -36,6 +36,8 @@ public sealed class ChatEngineCore
     {
         if (!profile) return;
 
+        DecaySignals(profile, rt, dt);
+
         rt.now += dt;
         rt.accum += dt;
 
@@ -174,11 +176,13 @@ public sealed class ChatEngineCore
             {
                 w *= Mathf.Pow(profile.streakBias, rt.sameKindStreak);
             }
+            
+            ApplySignalWeightMultipliers(ref w, profile, rt, i);
 
             _wScratch[i] = w;
             total += w;
         }
-
+        
         if (total <= 0f) return -1;
 
         float roll = _rng.Range(0f, total);
@@ -216,6 +220,52 @@ public sealed class ChatEngineCore
         if (profile.noRepeatTextWindowN > 0 && evt.textId != 0)
         {
             rt.recentTextIds.Push(evt.textId);
+        }
+    }
+    
+    private void DecaySignals(ChatRuleProfileSO profile, ChatEngineRuntime rt, float dt)
+    {
+        float decay = Mathf.Max(0f, profile.signalDecayPerSec) * dt;
+
+        rt.idolSpokeBoost = Mathf.Max(0f, rt.idolSpokeBoost - decay);
+        rt.donationBoost = Mathf.Max(0f, rt.donationBoost - decay);
+        rt.bigDonationBoost = Mathf.Max(0f, rt.bigDonationBoost - decay);
+        rt.systemBoost = Mathf.Max(0f, rt.systemBoost - decay);
+        rt.myMsgBoost = Mathf.Max(0f, rt.myMsgBoost - decay);
+    }
+    
+    private void ApplySignalWeightMultipliers(ref float w, ChatRuleProfileSO profile, ChatEngineRuntime rt, int kindIndex)
+    {
+        var kind = (ChatEventKind)kindIndex;
+
+        if (kind == ChatEventKind.Idol && rt.idolSpokeBoost > 0f)
+        {
+            float mul = Mathf.Lerp(1f, profile.idolSpokeWeightMul, rt.idolSpokeBoost);
+            w *= mul;
+        }
+
+        if (kind == ChatEventKind.Donation && rt.donationBoost > 0f)
+        {
+            float mul = Mathf.Lerp(1f, profile.donationWeightMul, rt.donationBoost);
+            w *= mul;
+        }
+
+        if (kind == ChatEventKind.Donation && rt.bigDonationBoost > 0f)
+        {
+            float mul = Mathf.Lerp(1f, profile.bigDonationWeightMul, rt.bigDonationBoost);
+            w *= mul;
+        }
+
+        if (kind == ChatEventKind.System && rt.systemBoost > 0f)
+        {
+            float mul = Mathf.Lerp(1f, profile.systemWeightMul, rt.systemBoost);
+            w *= mul;
+        }
+
+        if (kind == ChatEventKind.MyMsg && rt.myMsgBoost > 0f)
+        {
+            float mul = Mathf.Lerp(1f, profile.myMsgWeightMul, rt.myMsgBoost);
+            w *= mul;
         }
     }
 }
