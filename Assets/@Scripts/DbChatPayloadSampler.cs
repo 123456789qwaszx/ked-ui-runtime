@@ -3,9 +3,9 @@ using UnityEngine;
 public sealed class DbChatPayloadSampler : IChatPayloadSampler
 {
     private readonly ChatContentDBSO _db;
-    private readonly IChatRng _rng;
+    private readonly UnityChatRng _rng;
 
-    public DbChatPayloadSampler(ChatContentDBSO db, IChatRng rng)
+    public DbChatPayloadSampler(ChatContentDBSO db, UnityChatRng rng)
     {
         _db = db;
         _rng = rng;

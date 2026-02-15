@@ -2250,7 +2250,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3990f690c7640bf4bb8ca0ce40cbec74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveUIRoot
-  chatRail: {fileID: 815626185}
 --- !u!225 &1438907183
 CanvasGroup:
   m_ObjectHideFlags: 0

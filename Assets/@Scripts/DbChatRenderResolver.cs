@@ -1,5 +1,10 @@
 using UnityEngine;
 
+public interface IChatRenderResolver
+{
+    ChatRenderModel Resolve(in ChatEvent evt);
+}
+
 public sealed class DbChatRenderResolver : IChatRenderResolver
 {
     private readonly ChatContentDBSO _db;

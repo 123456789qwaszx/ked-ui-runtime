@@ -32,18 +32,22 @@ MonoBehaviour:
     flavor: 1
     texts:
     - "\u314B\u314B\u314B\u314B\u314B"
+    - "\uB9DD\uB9DD\uB9DD"
+    - "\uB300\uB2E8"
   - kind: 0
     flavor: 2
     texts:
-    - "\u3139\u3147 \uAC10\uB2E4\uC0B4\uC774"
+    - "\u3139\u3147 \uAC10\uB2E4\uC0B4\uC774\uB124"
   - kind: 1
     flavor: 0
     texts:
-    - "\uC624\uB298 \uBC29\uC1A1 \uB808\uC804"
+    - "\uC624\uB298 \uBC29\uC1A1 \uB808\uC804\uB4DC"
   - kind: 2
     flavor: 0
     texts:
     - "\uACE0\uB9C8\uC6CC\uC694! \uC624\uB298 \uC9C4\uC9DC \uD589\uBCF5\uD574\uC694!!"
+    - "\uC81C\uAC00 \uC774\uB807\uAC8C \uD589\uBCF5\uD574\uB3C4 \uB418\uB294\uAC78\uAE4C\uC694..."
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4."
   donationAmounts:
   - amount: 1000
     weight: 5

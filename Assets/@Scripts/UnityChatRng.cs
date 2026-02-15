@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public sealed class UnityChatRng : IChatRng
+public sealed class UnityChatRng
 {
     public float Next01() => Random.value;
     public float Range(float a, float b) => Random.Range(a, b);

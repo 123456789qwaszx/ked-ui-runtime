@@ -18,25 +18,30 @@ public sealed class ChatEntryViewPool
     {
         for (int i = 0; i < n; i++)
         {
-            var v = Object.Instantiate(_prefab, _poolRoot);
-            v.gameObject.SetActive(false);
-            _stack.Push(v);
+            ChatEntryView view = Object.Instantiate(_prefab, _poolRoot);
+            view.gameObject.SetActive(false);
+            _stack.Push(view);
         }
     }
 
     public ChatEntryView Spawn(Transform parent)
     {
-        ChatEntryView v = _stack.Count > 0 ? _stack.Pop() : Object.Instantiate(_prefab, _poolRoot);
-        v.transform.SetParent(parent, false);
-        v.gameObject.SetActive(true);
-        return v;
+        ChatEntryView view = _stack.Count > 0 ?
+            _stack.Pop() 
+            : Object.Instantiate(_prefab, _poolRoot);
+        
+        view.transform.SetParent(parent, false);
+        view.gameObject.SetActive(true);
+        return view;
     }
 
-    public void Despawn(ChatEntryView v)
+    public void Despawn(ChatEntryView view)
     {
-        if (!v) return;
-        v.gameObject.SetActive(false);
-        v.transform.SetParent(_poolRoot, false);
-        _stack.Push(v);
+        if (!view) 
+            return;
+        
+        view.gameObject.SetActive(false);
+        view.transform.SetParent(_poolRoot, false);
+        _stack.Push(view);
     }
 }

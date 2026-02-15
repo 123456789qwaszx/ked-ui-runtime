@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ChatContentDB", menuName = "Live/Chat Content DB", order = 210)]

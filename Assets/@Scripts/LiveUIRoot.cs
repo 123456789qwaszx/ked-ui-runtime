@@ -32,6 +32,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
     // ===== Cache =====
     private RectTransform phoneRoot;
 
+    private ChatRail chatRail;
+    
     private ScrollRect chatScroll;
     private RectTransform chatContent;
 
@@ -42,7 +44,6 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
     #endregion
 
-    [SerializeField]private ChatRail chatRail;
     private bool valid;
 
     protected override void Initialize()

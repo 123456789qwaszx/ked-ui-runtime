@@ -2,7 +2,7 @@ using System;
 
 public sealed class ChatEngineRuntime
 {
-    public double now;
+    public float now;
 
     public float accum;
     public float timeUntilNextEmit;
@@ -28,6 +28,13 @@ public sealed class ChatEngineRuntime
     public float bigDonationBoost;    // 0..1
     public float systemBoost;         // 0..1
     public float myMsgBoost;          // 0..1
+    
+    // ===== Hold until (absolute time) =====
+    public float idolSpokeHoldUntil;
+    public float donationHoldUntil;
+    public float bigDonationHoldUntil;
+    public float systemHoldUntil;
+    public float myMsgHoldUntil;
 
     public ChatEngineRuntime(int kindCount, int noRepeatWindow)
     {
@@ -64,5 +71,11 @@ public sealed class ChatEngineRuntime
         bigDonationBoost = 0f;
         systemBoost = 0f;
         myMsgBoost = 0f;
+
+        idolSpokeHoldUntil = 0f;
+        donationHoldUntil = 0f;
+        bigDonationHoldUntil = 0f;
+        systemHoldUntil = 0f;
+        myMsgHoldUntil = 0f;
     }
 }

@@ -1,13 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IChatRng
-{
-    float Next01();                 // [0,1)
-    float Range(float a, float b);  // [a,b)
-    int RangeInt(int a, int bExclusive);
-}
-
 public interface IChatPayloadSampler
 {
     // kindIndex를 받아서 “텍스트/금액/이모트” 같은 payload를 샘플링하고,
@@ -19,90 +12,92 @@ public sealed class ChatEngineCore
 {
     private readonly int _kindCount;
     private readonly IChatPayloadSampler _sampler;
-    private readonly IChatRng _rng;
+    private readonly UnityChatRng _rng;
 
-    // 샘플링 스크래치 (할당 방지)
-    private readonly float[] _wScratch;
+    // 샘플링 스크래치 버퍼
+    private readonly float[] _weightScratch;
 
-    public ChatEngineCore(int kindCount, IChatPayloadSampler sampler, IChatRng rng)
+    public ChatEngineCore(int kindCount, IChatPayloadSampler sampler, UnityChatRng rng)
     {
         _kindCount = kindCount;
         _sampler = sampler;
         _rng = rng;
-        _wScratch = new float[kindCount];
+        _weightScratch = new float[kindCount];
     }
 
-    public void Tick(ChatRuleProfileSO profile, ChatEngineRuntime rt, float dt, Queue<ChatEvent> outQueue)
+    public void Tick(ChatRuleProfileSO profile, ChatEngineRuntime chatEngineRuntime, float dt, Queue<ChatEvent> outQueue)
     {
-        if (!profile) return;
+        if (!profile)
+            return;
+        
+        chatEngineRuntime.now += dt;
+        chatEngineRuntime.accum += dt;
 
-        DecaySignals(profile, rt, dt);
-
-        rt.now += dt;
-        rt.accum += dt;
-
+        DecaySignals(profile, chatEngineRuntime, dt);
+        
         // 프레임 드랍에도 정확히 따라가기
         int safety = 128; // 혹시 dt가 폭발했을 때 무한루프 방지
-        while (rt.accum >= rt.timeUntilNextEmit && safety-- > 0)
+        while (chatEngineRuntime.accum >= chatEngineRuntime.timeUntilNextEmit && safety-- > 0)
         {
-            rt.accum -= rt.timeUntilNextEmit;
+            chatEngineRuntime.accum -= chatEngineRuntime.timeUntilNextEmit;
 
             // 버스트 시작 체크 (버스트가 아니고, 발행 타이밍에 도달했을 때만)
-            if (!rt.isBursting)
+            if (!chatEngineRuntime.isBursting)
             {
-                if (TryStartBurst(profile, rt))
+                if (TryStartBurst(profile, chatEngineRuntime))
                 {
                     // 버스트는 "바로 다음 emit 간격"을 burst interval로 둠
-                    rt.timeUntilNextEmit = NextBurstInterval(profile);
+                    chatEngineRuntime.timeUntilNextEmit = NextBurstInterval(profile);
                     continue;
                 }
             }
 
             // 1) Kind 샘플
-            int kindIndex = SampleKindIndex(profile, rt);
+            int kindIndex = SampleKindIndex(profile, chatEngineRuntime);
 
             if (kindIndex >= 0)
             {
                 // 2) Payload 샘플 (DB)
-                if (_sampler != null && _sampler.TrySample(kindIndex, rt, out var evt))
+                if (_sampler != null && _sampler.TrySample(kindIndex, chatEngineRuntime, out ChatEvent evt))
                 {
                     // 3) 기록 (streak/cooldown/no-repeat 등)
-                    RecordAfterEmit(profile, rt, kindIndex, evt);
+                    RecordAfterEmit(profile, chatEngineRuntime, kindIndex, evt);
                     outQueue.Enqueue(evt);
                 }
             }
 
             // 4) 다음 간격 스케줄
-            if (rt.isBursting)
+            if (chatEngineRuntime.isBursting)
             {
-                rt.burstRemaining--;
-                if (rt.burstRemaining <= 0)
+                chatEngineRuntime.burstRemaining--;
+                if (chatEngineRuntime.burstRemaining <= 0)
                 {
-                    rt.isBursting = false;
-                    rt.timeUntilNextEmit = NextNormalInterval(profile);
+                    chatEngineRuntime.isBursting = false;
+                    chatEngineRuntime.timeUntilNextEmit = NextNormalInterval(profile);
                 }
                 else
                 {
-                    rt.timeUntilNextEmit = NextBurstInterval(profile);
+                    chatEngineRuntime.timeUntilNextEmit = NextBurstInterval(profile);
                 }
             }
             else
             {
-                rt.timeUntilNextEmit = NextNormalInterval(profile);
+                chatEngineRuntime.timeUntilNextEmit = NextNormalInterval(profile);
             }
         }
 
         // safety로 빠져나온 경우, accum을 정리(폭주 방지)
         if (safety <= 0)
         {
-            rt.accum = 0;
-            rt.timeUntilNextEmit = Mathf.Max(0.05f, rt.timeUntilNextEmit);
+            chatEngineRuntime.accum = 0;
+            chatEngineRuntime.timeUntilNextEmit = Mathf.Max(0.05f, chatEngineRuntime.timeUntilNextEmit);
         }
     }
 
     private bool TryStartBurst(ChatRuleProfileSO profile, ChatEngineRuntime rt)
     {
-        if (profile.burstChancePerSec <= 0f) return false;
+        if (profile.burstChancePerSec <= 0f)
+            return false;
 
         // “발행 시점”에서만 확률 체크: dt 독립적으로 안정
         // chancePerSec를 “발행마다”로 변환하려면 대략 interval을 곱해도 되지만,
@@ -110,9 +105,10 @@ public sealed class ChatEngineCore
         float p = Mathf.Clamp01(profile.burstChancePerSec * Mathf.Max(0.05f, rt.timeUntilNextEmit));
         if (_rng.Next01() >= p) return false;
 
-        int len = _rng.RangeInt(profile.burstLengthRange.x, profile.burstLengthRange.y + 1);
-        rt.isBursting = len > 0;
-        rt.burstRemaining = len;
+        int length = _rng.RangeInt(profile.burstLengthRange.x, profile.burstLengthRange.y + 1);
+        rt.isBursting = length > 0;
+        rt.burstRemaining = length;
+        
         return rt.isBursting;
     }
 
@@ -139,24 +135,28 @@ public sealed class ChatEngineCore
         // 0) weight source 선택 (burst override)
         // 여기서 중요한 건 “foreach + 리스트 생성”을 피하고,
         // 런타임에서 kindCount 배열로 weight map을 만들어 쓰는 것.
-        // 지금은 profile에서 직접 조회하는 방식이므로, 아래는 안전한 기본 구현(개선 포인트는 하단에 따로).
+        // 지금은 profile에서 직접 조회하는 방식
         // ----
         float total = 0f;
         for (int i = 0; i < _kindCount; i++)
         {
-            var kind = (ChatEventKind)i;
-            float w = profile.GetKindWeight(kind, rt.isBursting);
+            ChatEventKind kind = (ChatEventKind)i;
+            float weight = profile.GetKindWeight(kind, rt.isBursting);
 
-            if (w <= 0f) { _wScratch[i] = 0f; continue; }
+            if (weight <= 0f)
+            {
+                _weightScratch[i] = 0f;
+                continue;
+            }
 
             // cooldown
-            float cd = profile.GetKindCooldown(kind);
-            if (cd > 0f && rt.cooldownUntilByKind[i] > rt.now) { _wScratch[i] = 0f; continue; }
+            float cooldown = profile.GetKindCooldown(kind);
+            if (cooldown > 0f && rt.cooldownUntilByKind[i] > rt.now) { _weightScratch[i] = 0f; continue; }
 
             // same-kind streak limit
             if (rt.lastKindIndex == i && rt.sameKindStreak >= profile.maxSameKindStreak)
             {
-                _wScratch[i] = 0f;
+                _weightScratch[i] = 0f;
                 continue;
             }
 
@@ -166,7 +166,7 @@ public sealed class ChatEngineCore
                 double minInterval = 1.0 / profile.maxDonateFrequency;
                 if (rt.now - rt.lastDonationAt < minInterval)
                 {
-                    _wScratch[i] = 0f;
+                    _weightScratch[i] = 0f;
                     continue;
                 }
             }
@@ -174,13 +174,13 @@ public sealed class ChatEngineCore
             // streak bias (연속성 보정)
             if (rt.lastKindIndex == i && rt.sameKindStreak > 0)
             {
-                w *= Mathf.Pow(profile.streakBias, rt.sameKindStreak);
+                weight *= Mathf.Pow(profile.streakBias, rt.sameKindStreak);
             }
             
-            ApplySignalWeightMultipliers(ref w, profile, rt, i);
+            ApplySignalWeightMultipliers(ref weight, profile, rt, i);
 
-            _wScratch[i] = w;
-            total += w;
+            _weightScratch[i] = weight;
+            total += weight;
         }
         
         if (total <= 0f) return -1;
@@ -189,11 +189,16 @@ public sealed class ChatEngineCore
         float cum = 0f;
         for (int i = 0; i < _kindCount; i++)
         {
-            float w = _wScratch[i];
-            if (w <= 0f) continue;
-            cum += w;
-            if (roll < cum) return i;
+            float weight = _weightScratch[i];
+            if (weight <= 0f)
+                continue;
+            
+            cum += weight;
+            
+            if (roll < cum)
+                return i;
         }
+        
         return -1;
     }
 
@@ -226,46 +231,57 @@ public sealed class ChatEngineCore
     private void DecaySignals(ChatRuleProfileSO profile, ChatEngineRuntime rt, float dt)
     {
         float decay = Mathf.Max(0f, profile.signalDecayPerSec) * dt;
+        float now = rt.now;
 
-        rt.idolSpokeBoost = Mathf.Max(0f, rt.idolSpokeBoost - decay);
-        rt.donationBoost = Mathf.Max(0f, rt.donationBoost - decay);
-        rt.bigDonationBoost = Mathf.Max(0f, rt.bigDonationBoost - decay);
-        rt.systemBoost = Mathf.Max(0f, rt.systemBoost - decay);
-        rt.myMsgBoost = Mathf.Max(0f, rt.myMsgBoost - decay);
+        // Hold 중이면 감쇠하지 않음
+        if (now >= rt.idolSpokeHoldUntil)
+            rt.idolSpokeBoost = Mathf.Max(0f, rt.idolSpokeBoost - decay);
+
+        if (now >= rt.donationHoldUntil)
+            rt.donationBoost = Mathf.Max(0f, rt.donationBoost - decay);
+
+        if (now >= rt.bigDonationHoldUntil)
+            rt.bigDonationBoost = Mathf.Max(0f, rt.bigDonationBoost - decay);
+
+        if (now >= rt.systemHoldUntil)
+            rt.systemBoost = Mathf.Max(0f, rt.systemBoost - decay);
+
+        if (now >= rt.myMsgHoldUntil)
+            rt.myMsgBoost = Mathf.Max(0f, rt.myMsgBoost - decay);
     }
     
-    private void ApplySignalWeightMultipliers(ref float w, ChatRuleProfileSO profile, ChatEngineRuntime rt, int kindIndex)
+    private void ApplySignalWeightMultipliers(ref float weight, ChatRuleProfileSO profile, ChatEngineRuntime rt, int kindIndex)
     {
-        var kind = (ChatEventKind)kindIndex;
+        ChatEventKind kind = (ChatEventKind)kindIndex;
 
         if (kind == ChatEventKind.Idol && rt.idolSpokeBoost > 0f)
         {
             float mul = Mathf.Lerp(1f, profile.idolSpokeWeightMul, rt.idolSpokeBoost);
-            w *= mul;
+            weight *= mul;
         }
 
         if (kind == ChatEventKind.Donation && rt.donationBoost > 0f)
         {
             float mul = Mathf.Lerp(1f, profile.donationWeightMul, rt.donationBoost);
-            w *= mul;
+            weight *= mul;
         }
 
         if (kind == ChatEventKind.Donation && rt.bigDonationBoost > 0f)
         {
             float mul = Mathf.Lerp(1f, profile.bigDonationWeightMul, rt.bigDonationBoost);
-            w *= mul;
+            weight *= mul;
         }
 
         if (kind == ChatEventKind.System && rt.systemBoost > 0f)
         {
             float mul = Mathf.Lerp(1f, profile.systemWeightMul, rt.systemBoost);
-            w *= mul;
+            weight *= mul;
         }
 
         if (kind == ChatEventKind.MyMsg && rt.myMsgBoost > 0f)
         {
             float mul = Mathf.Lerp(1f, profile.myMsgWeightMul, rt.myMsgBoost);
-            w *= mul;
+            weight *= mul;
         }
     }
 }

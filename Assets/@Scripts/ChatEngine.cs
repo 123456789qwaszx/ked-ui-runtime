@@ -4,23 +4,16 @@ using UnityEngine;
 
 public sealed class ChatEngine : MonoBehaviour
 {
-    [Header("Profile")]
-    [SerializeField] private ChatRuleProfileSO profile;
-
-    [Header("Content")]
-    [SerializeField] private ChatContentDBSO contentDb;
-
-    [Header("UI")]
-    [SerializeField] private ChatRail rail;
-
-    [Header("Debug")]
-    [SerializeField] private bool autoStart = true;
+    [Header("Profile")] [SerializeField] private ChatRuleProfileSO profile;
+    [Header("Content")] [SerializeField] private ChatContentDBSO contentDb;
+    [Header("UI")] [SerializeField] private ChatRail rail;
+    [Header("Debug")] [SerializeField] private bool autoStart = true;
 
     private ChatEngineCore _core;
     private ChatEngineRuntime _rt;
     private Queue<ChatEvent> _queue;
 
-    private IChatRng _rng;
+    private UnityChatRng _rng;
     private IChatPayloadSampler _sampler;
     private IChatRenderResolver _resolver;
 
@@ -40,8 +33,7 @@ public sealed class ChatEngine : MonoBehaviour
         _core = new ChatEngineCore(kindCount, _sampler, _rng);
         _rt = new ChatEngineRuntime(kindCount, profile ? profile.noRepeatTextWindowN : 0);
 
-        if (rail)
-            rail.BindSource(_queue, _resolver);
+        rail.BindSource(_queue, _resolver);
 
         if (autoStart)
             StartEngine();
@@ -77,23 +69,40 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void PushSignals(ChatSignals signals)
     {
-        // 즉시 boost 주입 (여러 번 와도 최대 1로 clamp)
+        if (!profile) return; // holdSeconds 읽기 위해
+
+        float hold = Mathf.Max(0f, profile.signalHoldSeconds);
+        float until = _rt.now + hold;
+
         if (signals.Has(ChatSignalFlags.IdolSpoke))
+        {
             _rt.idolSpokeBoost = 1f;
+            _rt.idolSpokeHoldUntil = Mathf.Max(_rt.idolSpokeHoldUntil, until);
+        }
 
         if (signals.Has(ChatSignalFlags.DonationHappened))
+        {
             _rt.donationBoost = 1f;
+            _rt.donationHoldUntil = Mathf.Max(_rt.donationHoldUntil, until);
+        }
 
         if (signals.Has(ChatSignalFlags.BigDonationHappened))
+        {
             _rt.bigDonationBoost = 1f;
+            _rt.bigDonationHoldUntil = Mathf.Max(_rt.bigDonationHoldUntil, until);
+        }
 
         if (signals.Has(ChatSignalFlags.SystemNotice))
+        {
             _rt.systemBoost = 1f;
+            _rt.systemHoldUntil = Mathf.Max(_rt.systemHoldUntil, until);
+        }
 
         if (signals.Has(ChatSignalFlags.ISpoke))
+        {
             _rt.myMsgBoost = 1f;
-
-        // donation amount 같은 건 sampler가 참고할 수 있게 별도 저장해도 됨
+            _rt.myMsgHoldUntil = Mathf.Max(_rt.myMsgHoldUntil, until);
+        }
     }
 
     private void Update()

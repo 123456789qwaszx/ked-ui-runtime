@@ -45,10 +45,10 @@ public sealed class ChatRail : MonoBehaviour
 
         while (budget-- > 0 && _sourceQueue.Count > 0)
         {
-            var evt = _sourceQueue.Dequeue();
-            var model = _resolver.Resolve(in evt);
+            ChatEvent evt = _sourceQueue.Dequeue();
+            ChatRenderModel model = _resolver.Resolve(in evt);
 
-            var view = _pool.Spawn(contentRoot);
+            ChatEntryView view = _pool.Spawn(contentRoot);
             view.Bind(in model);
 
             _alive.Add(view);
