@@ -1,3 +1,5 @@
+// LiveDevHarness.cs (Updated)
+// Dev/Editor-only: 데이터 기반 테스트 지원
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections;
 using UnityEngine;
@@ -7,6 +9,7 @@ public sealed class LiveDevHarness : MonoBehaviour
     [Header("References")]
     [SerializeField] private DonationHandler donationHandler;
     [SerializeField] private ChatRail chatRail;
+    [SerializeField] private ChatStreamController chatStreamController;
 
     [Header("Scenario Test")]
     [SerializeField] private LiveTestScenarioSO scenario;
@@ -16,9 +19,15 @@ public sealed class LiveDevHarness : MonoBehaviour
     [SerializeField] private bool enableAutoFeed = false;
     [SerializeField] private float feedInterval = 0.33f;
 
+    [Header("Data-Driven Test (New)")]
+    [Tooltip("데이터 기반 자동 채팅 테스트")]
+    [SerializeField] private bool enableDataDrivenStream = false;
+    [SerializeField] private float dataDrivenInterval = 1.5f;
+
     private Coroutine scenarioRoutine;
     private Coroutine autoFeedRoutine;
-    
+    private Coroutine dataDrivenRoutine;
+
     private void Start()
     {
         if (autoRunScenarioOnStart && scenario)
@@ -26,6 +35,14 @@ public sealed class LiveDevHarness : MonoBehaviour
 
         if (enableAutoFeed)
             RunStressTest();
+
+        if (enableDataDrivenStream)
+            StartDataDrivenStream();
+    }
+
+    private void OnDestroy()
+    {
+        StopAllTests();
     }
 
     // ========== Context Menu (인스펙터 우클릭) ==========
@@ -72,6 +89,39 @@ public sealed class LiveDevHarness : MonoBehaviour
             StopCoroutine(autoFeedRoutine);
             autoFeedRoutine = null;
         }
+    }
+
+    [ContextMenu("▶ Data-Driven Stream")]
+    public void StartDataDrivenStream()
+    {
+        if (!chatStreamController)
+        {
+            Debug.LogWarning("[LiveDevHarness] ChatStreamController not assigned.", this);
+            return;
+        }
+
+        if (dataDrivenRoutine != null)
+            StopCoroutine(dataDrivenRoutine);
+
+        dataDrivenRoutine = StartCoroutine(DataDrivenStreamRoutine());
+    }
+
+    [ContextMenu("■ Stop Data-Driven Stream")]
+    public void StopDataDrivenStream()
+    {
+        if (dataDrivenRoutine != null)
+        {
+            StopCoroutine(dataDrivenRoutine);
+            dataDrivenRoutine = null;
+        }
+    }
+
+    [ContextMenu("■ Stop All Tests")]
+    public void StopAllTests()
+    {
+        StopScenario();
+        StopStressTest();
+        StopDataDrivenStream();
     }
 
     [ContextMenu("🧹 Clear Chat")]
@@ -136,7 +186,7 @@ public sealed class LiveDevHarness : MonoBehaviour
                 // Donation은 Handler 통해서 처리 (reaction 포함)
                 if (step.isMy && donationHandler)
                 {
-                    donationHandler.SubmitDonation();
+                    donationHandler.SubmitDonation(step.donationAmount, step.name);
                 }
                 else
                 {
@@ -192,6 +242,29 @@ public sealed class LiveDevHarness : MonoBehaviour
         }
 
         autoFeedRoutine = null;
+    }
+
+    // ========== Data-Driven Stream (New) ==========
+
+    private IEnumerator DataDrivenStreamRoutine()
+    {
+        if (!chatStreamController)
+        {
+            Debug.LogError("[LiveDevHarness] ChatStreamController not found.", this);
+            yield break;
+        }
+
+        Debug.Log("[LiveDevHarness] Data-Driven Stream started.");
+
+        while (enableDataDrivenStream)
+        {
+            yield return new WaitForSeconds(dataDrivenInterval);
+
+            // ChatStreamController를 통해 데이터 기반 채팅 생성
+            chatStreamController.GenerateRandomChat();
+        }
+
+        dataDrivenRoutine = null;
     }
 }
 #endif

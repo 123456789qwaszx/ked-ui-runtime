@@ -73,9 +73,6 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
         BindEvent(exitButton, _ => OnExitRequested?.Invoke());
         BindEvent(donateButton, _ => OnDonateRequested?.Invoke());
-
-        if (chatRail != null)
-            chatRail.Bind(chatScroll, chatContent);
     }
 
     public ChatRail GetChatRail() => chatRail;

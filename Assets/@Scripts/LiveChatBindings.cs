@@ -41,6 +41,6 @@ public sealed class LiveChatBindings : IDisposable
 
     private void HandleDonateButton()
     {
-        _donationHandler.SubmitDonation();
+        //_donationHandler.SubmitDonation();
     }
 }

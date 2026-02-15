@@ -22,13 +22,13 @@ public sealed class DonationHandler : MonoBehaviour
     /// <summary>
     /// 후원 제출 (채팅 반영 + 아이돌 반응)
     /// </summary>
-    public void SubmitDonation()
+    public void SubmitDonation(int amount, string donorName)
     {
-        int amount = quickDonateAmounts != null && quickDonateAmounts.Length > 0 
-            ? quickDonateAmounts[0] 
-            : 1000;
-        
-        string donorName = myName;
+        // int amount = quickDonateAmounts != null && quickDonateAmounts.Length > 0 
+        //     ? quickDonateAmounts[0] 
+        //     : 1000;
+        //
+        // string donorName = myName;
 
         chatRail.PushDonation(donorName, amount, bodyOrEmpty: "", isMy: true);
 

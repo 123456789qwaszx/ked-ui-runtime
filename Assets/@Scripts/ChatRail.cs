@@ -1,13 +1,9 @@
-// ChatRail.cs
+// ChatRail.cs (Updated)
+// View Layer: ChatEntryData를 받아서 UI에 표시만 담당
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ChatRail - 풀링 기반 스크롤 리스트.
-/// - 30줄/10초에서도 GC/깨짐 없이 동작 목표
-/// - PushChat / PushDonation / PushIdol 로 한 곳으로 통합
-/// </summary>
 public sealed class ChatRail : MonoBehaviour
 {
     [Header("Bind (or assign via LiveUIRoot)")]
@@ -16,128 +12,81 @@ public sealed class ChatRail : MonoBehaviour
 
     [Header("Pooling")]
     [SerializeField] private ChatEntryView entryPrefab;
-    [SerializeField] private int warmupCount = 8;
     [SerializeField] private int maxEntries = 10;
 
     private readonly Stack<ChatEntryView> pool = new();
-    private readonly Queue<ChatEntryView> active = new();
-    private bool initialized;
+    private readonly Queue<ChatEntryView> activeChat = new();
 
-    public void Bind(ScrollRect sr, RectTransform ct)
-    {
-        scrollRect = sr;
-        content = ct;
-        TryInitialize();
-    }
-
-    private void Awake() => TryInitialize();
-
-    private void TryInitialize()
-    {
-        if (initialized) return;
-        if (!scrollRect || !content || !entryPrefab) return;
-
-        Warmup(warmupCount);
-        initialized = true;
-    }
-
-    private void Warmup(int count)
-    {
-        for (int i = 0; i < Mathf.Max(0, count); i++)
-        {
-            var v = CreateNew();
-            Release(v);
-        }
-    }
-
-    public void Clear()
-    {
-        if (!initialized) return;
-
-        while (active.Count > 0)
-            Release(active.Dequeue());
-
-        if (scrollRect)
-            scrollRect.verticalNormalizedPosition = 0f;
-    }
-
+    /// <summary>
+    /// ChatEntryData를 받아서 UI에 표시
+    /// </summary>
     public void Push(in ChatEntryData data, bool autoScrollToBottom = true)
     {
-        if (!initialized) return;
+        ChatEntryView view = Acquire();
+        view.Present(data);
 
-        var v = Acquire();
-        v.Present(data);
+        activeChat.Enqueue(view);
 
-        active.Enqueue(v);
-
-        while (active.Count > maxEntries)
-            Release(active.Dequeue());
+        while (activeChat.Count > maxEntries)
+            Release(activeChat.Dequeue());
 
         if (autoScrollToBottom)
             ScrollToBottom();
     }
 
-    public void PushChat(string name, string body, bool isMy)
+    /// <summary>
+    /// 여러 개 한꺼번에 Push
+    /// </summary>
+    public void PushMultiple(ChatEntryData[] dataArray, bool autoScrollToBottom = true)
     {
-        var d = new ChatEntryData
-        {
-            kind = ChatEntryKind.Chat,
-            side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
-            name = name,
-            body = body,
-        };
-        Push(d, autoScrollToBottom: true);
-    }
+        if (dataArray == null || dataArray.Length == 0)
+            return;
 
-    public void PushDonation(string name, int amount, string bodyOrEmpty, bool isMy)
-    {
-        var d = new ChatEntryData
+        foreach (var data in dataArray)
         {
-            kind = ChatEntryKind.Donation,
-            side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
-            name = name,
-            body = bodyOrEmpty,
-            donationAmount = amount,
-        };
-        Push(d, autoScrollToBottom: true);
-    }
+            Push(data, autoScrollToBottom: false);
+        }
 
-    public void PushIdol(string body)
-    {
-        var d = new ChatEntryData
-        {
-            kind = ChatEntryKind.Idol,
-            side = ChatEntrySide.Other,
-            name = "",
-            body = body,
-        };
-        Push(d, autoScrollToBottom: true);
+        if (autoScrollToBottom)
+            ScrollToBottom();
     }
 
     private ChatEntryView Acquire()
     {
-        ChatEntryView v = pool.Count > 0 ? pool.Pop() : CreateNew();
+        ChatEntryView chat = pool.Count > 0 ?
+            pool.Pop() 
+            : CreateNew();
 
-        v.gameObject.SetActive(true);
-        v.transform.SetParent(content, worldPositionStays: false);
-        v.transform.SetAsLastSibling();
-        return v;
-    }
-
-    private void Release(ChatEntryView v)
-    {
-        if (!v) return;
-
-        v.gameObject.SetActive(false);
-        v.transform.SetParent(transform, worldPositionStays: false);
-        pool.Push(v);
+        chat.gameObject.SetActive(true);
+        chat.transform.SetParent(content, worldPositionStays: false);
+        chat.transform.SetAsLastSibling();
+        return chat;
     }
 
     private ChatEntryView CreateNew()
     {
-        var v = Instantiate(entryPrefab, transform);
-        v.gameObject.SetActive(false);
-        return v;
+        ChatEntryView chat = Instantiate(entryPrefab, transform);
+        chat.gameObject.SetActive(false);
+        return chat;
+    }
+
+    private void Release(ChatEntryView chatView)
+    {
+        if (!chatView)
+            return;
+
+        chatView.gameObject.SetActive(false);
+        chatView.transform.SetParent(transform, worldPositionStays: false);
+        pool.Push(chatView);
+    }
+
+    public void Clear()
+    {
+        while (activeChat.Count > 0)
+            Release(activeChat.Dequeue());
+
+        if (scrollRect)
+            scrollRect.verticalNormalizedPosition = 0f;
     }
 
     private void ScrollToBottom()
@@ -147,5 +96,46 @@ public sealed class ChatRail : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         scrollRect.verticalNormalizedPosition = 0f;
         Canvas.ForceUpdateCanvases();
+    }
+
+    // ========== Legacy Helpers (하위 호환) ==========
+    // 기존 코드와의 호환성 유지용
+    // 나중에 제거 권장
+
+    public void PushChat(string name, string body, bool isMy)
+    {
+        var data = new ChatEntryData
+        {
+            kind = ChatEntryKind.Chat,
+            side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
+            name = name,
+            body = body,
+        };
+        Push(data);
+    }
+
+    public void PushDonation(string name, int amount, string bodyOrEmpty, bool isMy)
+    {
+        var data = new ChatEntryData
+        {
+            kind = ChatEntryKind.Donation,
+            side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
+            name = name,
+            body = bodyOrEmpty,
+            donationAmount = amount,
+        };
+        Push(data);
+    }
+
+    public void PushIdol(string body)
+    {
+        var data = new ChatEntryData
+        {
+            kind = ChatEntryKind.Idol,
+            side = ChatEntrySide.Other,
+            name = "",
+            body = body,
+        };
+        Push(data);
     }
 }
