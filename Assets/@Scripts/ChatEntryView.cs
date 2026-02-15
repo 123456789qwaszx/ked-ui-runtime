@@ -1,36 +1,7 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static UIRefValidation;
-
-public enum ChatEntryKind : byte
-{
-    Chat = 0,
-    Donation = 1,
-    Idol = 2,
-    System = 3,
-}
-
-public enum ChatEntrySide : byte
-{
-    Other = 0,
-    My = 1,
-}
-
-[Serializable]
-public struct ChatEntryData
-{
-    public ChatEntryKind kind;
-    public ChatEntrySide side;
-
-    public string name;
-    public string body;
-
-    public int donationAmount;
-    public Sprite emoteSprite;
-    public bool bigEmoteOnly;
-}
 
 /// <summary>
 /// 채팅 엔트리 UI (풀링 전제) - 단일 루트.
@@ -114,17 +85,17 @@ public sealed class ChatEntryView : UIBase<ChatEntryView.Refs>
 
         // Idol/System은 기본적으로 Other(방송자/시스템) 취급
         ChatEntrySide side =
-            (data.kind == ChatEntryKind.Idol || data.kind == ChatEntryKind.System)
+            (data.type == ChatEntryType.Idol || data.type == ChatEntryType.System)
                 ? ChatEntrySide.Other
                 : data.side;
 
         ApplySideAlignment(side);
 
-        if (nameText) nameText.text = data.name ?? "";
-        if (bodyText) bodyText.text = data.body ?? "";
+        if (nameText) nameText.text = data.chatName ?? "";
+        if (bodyText) bodyText.text = data.chatBody ?? "";
 
         // Donation UI
-        bool isDonation = data.kind == ChatEntryKind.Donation;
+        bool isDonation = data.type == ChatEntryType.Donation;
         SetDonationUIVisible(isDonation);
         if (isDonation && amount) amount.text = data.donationAmount.ToString();
 
@@ -143,7 +114,7 @@ public sealed class ChatEntryView : UIBase<ChatEntryView.Refs>
         }
 
         // Idol/System은 이름 숨김
-        if (data.kind == ChatEntryKind.Idol || data.kind == ChatEntryKind.System)
+        if (data.type == ChatEntryType.Idol || data.type == ChatEntryType.System)
         {
             if (nameText) nameText.gameObject.SetActive(false);
         }

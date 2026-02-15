@@ -106,10 +106,10 @@ public sealed class ChatRail : MonoBehaviour
     {
         var data = new ChatEntryData
         {
-            kind = ChatEntryKind.Chat,
+            type = ChatEntryType.Chat,
             side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
-            name = name,
-            body = body,
+            chatName = name,
+            chatBody = body,
         };
         Push(data);
     }
@@ -118,10 +118,10 @@ public sealed class ChatRail : MonoBehaviour
     {
         var data = new ChatEntryData
         {
-            kind = ChatEntryKind.Donation,
+            type = ChatEntryType.Donation,
             side = isMy ? ChatEntrySide.My : ChatEntrySide.Other,
-            name = name,
-            body = bodyOrEmpty,
+            chatName = name,
+            chatBody = bodyOrEmpty,
             donationAmount = amount,
         };
         Push(data);
@@ -131,10 +131,10 @@ public sealed class ChatRail : MonoBehaviour
     {
         var data = new ChatEntryData
         {
-            kind = ChatEntryKind.Idol,
+            type = ChatEntryType.Idol,
             side = ChatEntrySide.Other,
-            name = "",
-            body = body,
+            chatName = "",
+            chatBody = body,
         };
         Push(data);
     }

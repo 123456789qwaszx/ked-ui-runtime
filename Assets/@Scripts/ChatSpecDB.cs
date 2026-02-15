@@ -1,150 +1,128 @@
-// ChatSpecDB.cs
-// 채팅 스펙 데이터베이스 (쿼리 API 제공)
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ChatSpecDB", menuName = "Live/Chat Spec DB", order = 201)]
 public sealed class ChatSpecDB : ScriptableObject
 {
-    [Header("Database")]
-    [Tooltip("전체 채팅 스펙 목록")]
     public ChatSpecSO[] specs;
 
-    [Header("Runtime Cache")]
-    [Tooltip("자동으로 인덱싱됨 (Play 모드에서만)")]
-    [SerializeField] private bool cacheBuilt = false;
-
     private Dictionary<string, ChatSpecSO> idCache;
-    private Dictionary<ChatEntryKind, List<ChatSpecSO>> kindCache;
+    private Dictionary<ChatCrowdKind, List<ChatSpecSO>> crowdCache;
+    private bool cacheBuilt;
 
     private void OnEnable()
     {
-        BuildCache();
+        BuildCache(force: false);
     }
 
-    public void BuildCache()
+#if UNITY_EDITOR
+    private void OnValidate()
     {
-        if (cacheBuilt && idCache != null && kindCache != null)
+        cacheBuilt = false;
+    }
+#endif
+
+    public void BuildCache(bool force)
+    {
+        if (!force && cacheBuilt && idCache != null && crowdCache != null)
             return;
 
-        idCache = new Dictionary<string, ChatSpecSO>();
-        kindCache = new Dictionary<ChatEntryKind, List<ChatSpecSO>>();
+        idCache = new Dictionary<string, ChatSpecSO>(256);
+        crowdCache = new Dictionary<ChatCrowdKind, List<ChatSpecSO>>(64);
 
-        foreach (var spec in specs)
+        if (specs != null)
         {
-            if (!spec) continue;
-
-            // ID 캐시
-            if (!string.IsNullOrEmpty(spec.id))
-                idCache[spec.id] = spec;
-
-            // Kind 캐시
-            if (!kindCache.TryGetValue(spec.kind, out var list))
+            for (int i = 0; i < specs.Length; i++)
             {
-                list = new List<ChatSpecSO>();
-                kindCache[spec.kind] = list;
+                var spec = specs[i];
+                if (!spec) continue;
+
+                if (!string.IsNullOrEmpty(spec.id))
+                    idCache[spec.id] = spec;
+
+                if (!crowdCache.TryGetValue(spec.crowdKind, out var list))
+                {
+                    list = new List<ChatSpecSO>(64);
+                    crowdCache.Add(spec.crowdKind, list);
+                }
+
+                list.Add(spec);
             }
-            list.Add(spec);
         }
 
         cacheBuilt = true;
     }
 
-    /// <summary>
-    /// ID로 단일 스펙 찾기
-    /// </summary>
+    // ✅ 기존 호환
     public ChatSpecSO GetById(string id)
     {
-        BuildCache();
-        return idCache.TryGetValue(id, out var spec) ? spec : null;
+        if (idCache == null || !cacheBuilt) BuildCache(force: false);
+        if (string.IsNullOrEmpty(id)) return null;
+
+        return idCache != null && idCache.TryGetValue(id, out var spec) ? spec : null;
     }
 
-    /// <summary>
-    /// Kind로 필터링
-    /// </summary>
-    public List<ChatSpecSO> QueryByKind(ChatEntryKind kind)
+    // ✅ 기존 호환 (외부에서 리스트를 수정해도 DB 캐시가 망가지지 않게 복사본 반환)
+    public List<ChatSpecSO> GetByCrowdKind(ChatCrowdKind kind)
     {
-        BuildCache();
-        return kindCache.TryGetValue(kind, out var list) ? list : new List<ChatSpecSO>();
+        if (crowdCache == null || !cacheBuilt) BuildCache(force: false);
+
+        if (crowdCache != null && crowdCache.TryGetValue(kind, out var list) && list != null)
+            return new List<ChatSpecSO>(list);
+
+        return new List<ChatSpecSO>(0);
     }
 
-    /// <summary>
-    /// 조건 태그로 필터링
-    /// </summary>
-    public List<ChatSpecSO> QueryByConditions(params string[] requiredConditions)
+    // ✅ 앞으로 “전체 풀” 필요할 때 안전하게 쓸 Query()
+    public List<ChatSpecSO> QueryAll()
     {
-        BuildCache();
+        var result = new List<ChatSpecSO>(specs != null ? specs.Length : 0);
+        if (specs == null) return result;
 
-        if (requiredConditions == null || requiredConditions.Length == 0)
-            return specs.ToList();
-
-        var results = new List<ChatSpecSO>();
-        foreach (var spec in specs)
+        for (int i = 0; i < specs.Length; i++)
         {
-            if (!spec) continue;
+            var s = specs[i];
+            if (s) result.Add(s);
+        }
 
-            // 모든 조건이 충족되면 추가
-            bool allMatch = true;
-            foreach (var required in requiredConditions)
+        return result;
+    }
+
+    public static bool MatchesAllConditions(ChatSpecSO spec, string[] required)
+    {
+        if (required == null || required.Length == 0)
+            return true;
+
+        if (spec.conditions == null || spec.conditions.Length == 0)
+            return false;
+
+        for (int i = 0; i < required.Length; i++)
+        {
+            string req = required[i];
+            bool found = false;
+
+            for (int j = 0; j < spec.conditions.Length; j++)
             {
-                if (spec.conditions == null || !spec.conditions.Contains(required))
+                if (spec.conditions[j] == req)
                 {
-                    allMatch = false;
+                    found = true;
                     break;
                 }
             }
 
-            if (allMatch)
-                results.Add(spec);
+            if (!found)
+                return false;
         }
 
-        return results;
+        return true;
     }
-
-    /// <summary>
-    /// Kind + 조건 복합 쿼리
-    /// </summary>
-    public List<ChatSpecSO> Query(ChatEntryKind? kind = null, params string[] conditions)
-    {
-        BuildCache();
-
-        var results = specs.AsEnumerable();
-
-        // Kind 필터
-        if (kind.HasValue)
-            results = results.Where(s => s && s.kind == kind.Value);
-
-        // 조건 필터
-        if (conditions != null && conditions.Length > 0)
-        {
-            results = results.Where(s =>
-            {
-                if (!s || s.conditions == null) return false;
-                foreach (var cond in conditions)
-                {
-                    if (!s.conditions.Contains(cond))
-                        return false;
-                }
-                return true;
-            });
-        }
-
-        return results.ToList();
-    }
-
-    /// <summary>
-    /// 전체 스펙 개수
-    /// </summary>
-    public int Count => specs?.Length ?? 0;
 
 #if UNITY_EDITOR
     [ContextMenu("Rebuild Cache")]
-    private void RebuildCache()
+    private void DebugRebuildCache()
     {
-        cacheBuilt = false;
-        BuildCache();
-        Debug.Log($"[ChatSpecDB] Cache rebuilt: {Count} specs", this);
+        BuildCache(force: true);
+        Debug.Log($"[ChatSpecDB] Cache rebuilt. specs={(specs != null ? specs.Length : 0)}", this);
     }
 #endif
 }

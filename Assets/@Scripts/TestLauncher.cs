@@ -55,10 +55,10 @@ public class TestLauncher : MonoBehaviour
     {
         chatRail.Push(new ChatEntryData
         {
-            kind = ChatEntryKind.System,
+            type = ChatEntryType.System,
             side = ChatEntrySide.Other,
-            name = "",
-            body = "방송을 종료합니다…",
+            chatName = "",
+            chatBody = "방송을 종료합니다…",
         });
     }
     

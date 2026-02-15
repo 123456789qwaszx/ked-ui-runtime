@@ -1,5 +1,3 @@
-// ChatStreamController.cs
-// 데이터 기반 채팅 생성 컨트롤러 (DB → Selector → Factory → ChatRail)
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,15 +10,16 @@ public sealed class ChatStreamController : MonoBehaviour
     [Header("Target")]
     [SerializeField] private ChatRail chatRail;
 
+    [Header("Preset (for waves)")]
+    [SerializeField] private ChatPresetSO presetA;
+    [SerializeField] private ChatPresetSO presetB;
+    [SerializeField] private ChatPresetSO presetC;
+
     [Header("Stream Settings")]
-    [Tooltip("자동 채팅 생성 간격 (초)")]
     [SerializeField] private float autoStreamInterval = 2f;
-    
-    [Tooltip("자동 채팅 활성화")]
     [SerializeField] private bool enableAutoStream = false;
 
     [Header("Query Conditions")]
-    [Tooltip("기본 조건 태그 (비워두면 전체)")]
     [SerializeField] private string[] defaultConditions;
 
     private Coroutine streamRoutine;
@@ -36,47 +35,7 @@ public sealed class ChatStreamController : MonoBehaviour
         StopAutoStream();
     }
 
-    // ========== Public API ==========
-
-    /// <summary>
-    /// 랜덤 채팅 1개 생성
-    /// </summary>
-    public void GenerateRandomChat(ChatEntryKind? kind = null, params string[] conditions)
-    {
-        if (!database)
-        {
-            Debug.LogError("[ChatStreamController] Database not assigned.", this);
-            return;
-        }
-
-        // 조건에 맞는 스펙 쿼리
-        var specs = database.Query(kind, conditions);
-        if (specs == null || specs.Count == 0)
-        {
-            Debug.LogWarning($"[ChatStreamController] No specs found for conditions: {string.Join(", ", conditions)}");
-            return;
-        }
-
-        // 가중치 랜덤 선택
-        var selectedSpec = ChatSpecSelector.SelectRandom(specs);
-        if (!selectedSpec)
-        {
-            Debug.LogError("[ChatStreamController] SelectRandom failed.");
-            return;
-        }
-
-        // Factory로 Data 생성
-        var data = ChatEntryFactory.Create(selectedSpec);
-
-        // ChatRail에 푸시
-        if (chatRail)
-            chatRail.Push(data);
-    }
-
-    /// <summary>
-    /// 여러 개 랜덤 채팅 생성
-    /// </summary>
-    public void GenerateRandomChats(int count, ChatEntryKind? kind = null, params string[] conditions)
+    public void EmitWave(ChatPreset preset, int count, params string[] conditions)
     {
         if (!database || !chatRail)
         {
@@ -84,46 +43,90 @@ public sealed class ChatStreamController : MonoBehaviour
             return;
         }
 
-        var specs = database.Query(kind, conditions);
-        if (specs == null || specs.Count == 0)
+        ChatPresetSO presetSO = ResolvePreset(preset);
+        if (!presetSO)
         {
-            Debug.LogWarning($"[ChatStreamController] No specs found.");
+            Debug.LogError($"[ChatStreamController] Preset asset missing: {preset}", this);
             return;
         }
 
-        // 여러 개 선택 (중복 허용)
-        var selectedSpecs = ChatSpecSelector.SelectRandomMultiple(specs, count);
+        if (count <= 0)
+            return;
 
-        // Factory로 Data 생성
-        var dataArray = ChatEntryFactory.CreateMultiple(selectedSpecs.ToArray());
+        int forcedMyMsg = 0;
+        bool allowMyMsg = presetSO.allowMyMsgHighlight && presetSO.myMsgRatio > 0f;
+        if (allowMyMsg)
+            forcedMyMsg = Mathf.Clamp(Mathf.CeilToInt(count * presetSO.myMsgRatio), 0, count);
 
-        // ChatRail에 푸시
-        chatRail.PushMultiple(dataArray);
+        bool allowToxic = presetSO.allowToxicRefrain;
+
+        for (int i = 0; i < count; i++)
+        {
+            bool forceMy = (i < forcedMyMsg);
+
+            ChatCrowdKind crowdKind = forceMy
+                ? ChatCrowdKind.MyMsg
+                : presetSO.RollCrowdKind(allowMyMsg: allowMyMsg, allowToxic: allowToxic);
+
+            var picked = PickSpecByCrowdKindWeighted(crowdKind, conditions);
+            if (!picked)
+                continue;
+
+            chatRail.Push(ChatEntryFactory.Create(picked));
+        }
     }
 
-    /// <summary>
-    /// 특정 ID로 채팅 생성
-    /// </summary>
-    public void GenerateById(string specId)
+    private ChatSpecSO PickSpecByCrowdKindWeighted(ChatCrowdKind kind, string[] conditions)
     {
-        if (!database || !chatRail)
+        List<ChatSpecSO> list = database.GetByCrowdKind(kind);
+        if (list == null || list.Count == 0)
+            return null;
+
+        float total = 0f;
+
+        for (int i = 0; i < list.Count; i++)
         {
-            Debug.LogError("[ChatStreamController] Database or ChatRail not assigned.", this);
-            return;
+            var s = list[i];
+            if (!s) continue;
+            if (s.entryType != ChatEntryType.Chat) continue; // 스트림은 기본 Chat만
+            if (!ChatSpecDB.MatchesAllConditions(s, conditions)) continue;
+
+            float w = Mathf.Max(0f, s.weight);
+            total += w;
         }
 
-        var spec = database.GetById(specId);
-        if (!spec)
+        if (total <= 0f)
+            return null;
+
+        float roll = Random.Range(0f, total);
+        float acc = 0f;
+
+        for (int i = 0; i < list.Count; i++)
         {
-            Debug.LogWarning($"[ChatStreamController] Spec not found: {specId}");
-            return;
+            var s = list[i];
+            if (!s) continue;
+            if (s.entryType != ChatEntryType.Chat) continue;
+            if (!ChatSpecDB.MatchesAllConditions(s, conditions)) continue;
+
+            float w = Mathf.Max(0f, s.weight);
+            acc += w;
+            if (roll < acc)
+                return s;
         }
 
-        var data = ChatEntryFactory.Create(spec);
-        chatRail.Push(data);
+        return null;
     }
 
-    // ========== Auto Stream ==========
+    private ChatPresetSO ResolvePreset(ChatPreset preset)
+    {
+        switch (preset)
+        {
+            case ChatPreset.A: return presetA;
+            case ChatPreset.B: return presetB;
+            case ChatPreset.C: return presetC;
+            default: return presetA;
+        }
+    }
 
     [ContextMenu("▶ Start Auto Stream")]
     public void StartAutoStream()
@@ -149,36 +152,7 @@ public sealed class ChatStreamController : MonoBehaviour
         while (enableAutoStream)
         {
             yield return new WaitForSeconds(autoStreamInterval);
-
-            // 기본 조건으로 랜덤 채팅 생성
-            GenerateRandomChat(null, defaultConditions);
+            EmitWave(ChatPreset.A, 1, defaultConditions);
         }
-    }
-
-    // ========== Debug Helpers ==========
-
-    [ContextMenu("🎲 Generate 1 Random Chat")]
-    private void DebugGenerateOne()
-    {
-        GenerateRandomChat();
-    }
-
-    [ContextMenu("🎲 Generate 5 Random Chats")]
-    private void DebugGenerateFive()
-    {
-        GenerateRandomChats(5);
-    }
-
-    [ContextMenu("📊 Print Weight Distribution")]
-    private void DebugPrintWeights()
-    {
-        if (!database)
-        {
-            Debug.LogError("[ChatStreamController] Database not assigned.");
-            return;
-        }
-
-        var specs = database.Query(null, defaultConditions);
-        ChatSpecSelector.PrintWeightDistribution(specs);
     }
 }
