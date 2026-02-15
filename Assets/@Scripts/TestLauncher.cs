@@ -1,22 +1,17 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class TestLauncher : MonoBehaviour
 {
     private LiveChatBindings _liveFlowController;
     
     [SerializeField]private ChatRail chatRail;
-    [SerializeField]private IdolSpeechQueue idolQueue;
-    
     [Tooltip("LiveUI")]
     [SerializeField] private KeyCode liveKey = KeyCode.Alpha1;
     
     [SerializeField] private KeyCode liveStartKey = KeyCode.Alpha3;
     
-    [SerializeField] private KeyCode EnqueIdolChatKey = KeyCode.Alpha4;
-    
-    [SerializeField] private KeyCode StartIdolChatKey = KeyCode.Alpha5;
-    
-    [SerializeField] private KeyCode EndChatKey = KeyCode.Alpha6;
+    [SerializeField] private KeyCode endChatKey = KeyCode.Alpha6;
     
     private bool _init;
 
@@ -41,13 +36,7 @@ public class TestLauncher : MonoBehaviour
         if (Input.GetKeyDown(liveStartKey))
             PushTestLiveChat();
         
-        if (Input.GetKeyDown(EnqueIdolChatKey))
-            PushIdolChat();
-        
-        if (Input.GetKeyDown(StartIdolChatKey))
-            StartIdolChat();
-        
-        if (Input.GetKeyDown(EndChatKey))
+        if (Input.GetKeyDown(endChatKey))
             EndChat();
     }
     
@@ -61,16 +50,6 @@ public class TestLauncher : MonoBehaviour
     public void PushTestLiveChat()
     {
         chatRail.PushIdol("…방송을 시작합니다.");
-    }
-    
-    public void PushIdolChat()
-    {
-        idolQueue.Enqueue("채팅은 휴대폰 화면에 올라오는 걸로 테스트 중이야.");
-    }
-    
-    public void StartIdolChat()
-    {
-        idolQueue.Play();
     }
 
     public void EndChat()
@@ -88,15 +67,6 @@ public class TestLauncher : MonoBehaviour
     private void PlayWelcomeSequence()
     {
         chatRail.PushIdol("…방송을 시작합니다.");
-
-        // 환영 메시지 큐
-        foreach (var msg in welcomeMessages)
-        {
-            if (!string.IsNullOrEmpty(msg))
-                idolQueue.Enqueue(msg);
-        }
-
-        idolQueue.Play();
     }
     
     

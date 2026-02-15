@@ -4,7 +4,6 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private LiveUIRoot liveUI;
-    [SerializeField] private DonationHandler donationHandler;
     [SerializeField] LiveDevHarness liveDevHarness;
     [SerializeField] TestLauncher testLauncher;
 
@@ -12,7 +11,7 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     
     private void Awake()
     {
-        _liveChatBindings = new (donationHandler);
+        _liveChatBindings = new ();
         _liveChatBindings.BindLiveUIRoot(liveUI);
         
         testLauncher.Initialize(_liveChatBindings);

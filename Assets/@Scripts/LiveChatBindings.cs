@@ -4,14 +4,9 @@ using UnityEngine;
 public sealed class LiveChatBindings : IDisposable
 {
     private readonly UIBindingContext _ctx = new();
-    private readonly DonationHandler _donationHandler;
 
     private LiveUIRoot bound;
 
-    public LiveChatBindings (DonationHandler donationHandler)
-    {
-        _donationHandler = donationHandler;
-    }
 
     public void BindLiveUIRoot(LiveUIRoot liveUIRoot)
     {

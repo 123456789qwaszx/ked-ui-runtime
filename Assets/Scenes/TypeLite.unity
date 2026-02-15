@@ -1060,7 +1060,6 @@ MonoBehaviour:
   scrollRect: {fileID: 846867005}
   content: {fileID: 1874222590}
   entryPrefab: {fileID: 7587269143477995467, guid: 5afeab3c4c0c40644b200ba05bb11df9, type: 3}
-  warmupCount: 1
   maxEntries: 3
 --- !u!1 &832575517
 GameObject:
@@ -1785,12 +1784,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eb4cfdbc4334f54c87b6142d53cf625, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveDevHarness
-  donationHandler: {fileID: 1740886830}
   chatRail: {fileID: 815626185}
-  scenario: {fileID: 11400000, guid: cb9e2fee6c80d9244afd3bba9bbdf078, type: 2}
-  autoRunScenarioOnStart: 1
-  enableAutoFeed: 0
-  feedInterval: 0.33
+  chatStreamController: {fileID: 0}
+  enableDataDrivenStream: 0
+  dataDrivenInterval: 1.5
 --- !u!1 &1731713239
 GameObject:
   m_ObjectHideFlags: 0
@@ -1817,54 +1814,6 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 457.22256, y: 774.8849, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1740886829
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1740886831}
-  - component: {fileID: 1740886830}
-  m_Layer: 0
-  m_Name: DonationHandler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1740886830
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1740886829}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 941e1494dddec674f8910910fce648a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DonationHandler
-  chatRail: {fileID: 815626185}
-  idolQueue: {fileID: 1759434155}
-  minReactionDelay: 0.25
-  maxReactionDelay: 0.85
---- !u!4 &1740886831
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1740886829}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.08031, y: 0, z: 4.16156}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1901,53 +1850,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1759434152
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1759434154}
-  - component: {fileID: 1759434155}
-  m_Layer: 0
-  m_Name: IdolSpeechQueue
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1759434154
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1759434152}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1227.76, y: 1887.0544, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1759434155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1759434152}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51fd7db73106f664d820d974b775219c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::IdolSpeechQueue
-  minInterval: 1.2
-  maxInterval: 2
-  chatRail: {fileID: 815626185}
 --- !u!1 &1872200006
 GameObject:
   m_ObjectHideFlags: 0
@@ -2246,12 +2148,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestLauncher
   chatRail: {fileID: 815626185}
-  idolQueue: {fileID: 1759434155}
   liveKey: 49
   liveStartKey: 51
-  EnqueIdolChatKey: 52
-  StartIdolChatKey: 53
-  EndChatKey: 54
+  endChatKey: 54
   welcomeMessages:
   - "\uC548\uB155! \uC624\uB298\uB3C4 \uC640\uC918\uC11C \uACE0\uB9C8\uC6CC!"
   - "\uCC44\uD305\uC740 \uD734\uB300\uD3F0 \uD654\uBA74\uC5D0 \uC62C\uB77C\uC624\uB294
@@ -2531,7 +2430,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveStreamBootstrap
   liveUI: {fileID: 1438907182}
-  donationHandler: {fileID: 1740886830}
   liveDevHarness: {fileID: 1559853398}
   testLauncher: {fileID: 1912787948}
 --- !u!1 &2133458278
@@ -2705,6 +2603,4 @@ SceneRoots:
   - {fileID: 9155967952251032124}
   - {fileID: 504259316}
   - {fileID: 1559853397}
-  - {fileID: 1759434154}
   - {fileID: 2087987990}
-  - {fileID: 1740886831}
