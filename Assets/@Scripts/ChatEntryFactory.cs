@@ -54,8 +54,8 @@ public static class ChatEntryFactory
             return "";
 
         // 이름이 지정되어 있으면 그대로 사용
-        if (!string.IsNullOrEmpty(spec.name))
-            return spec.name;
+        if (!string.IsNullOrEmpty(spec.chatName))
+            return spec.chatName;
 
         // 이름이 없으면 랜덤 생성
         return GenerateRandomName();

@@ -4,7 +4,6 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private LiveUIRoot liveUI;
-    [SerializeField] LiveDevHarness liveDevHarness;
     [SerializeField] TestLauncher testLauncher;
 
     LiveChatBindings _liveChatBindings;

@@ -121,7 +121,7 @@ public static class ChatSpecSelector
         {
             if (!spec) continue;
             float percentage = totalWeight > 0 ? (spec.weight / totalWeight) * 100f : 0f;
-            Debug.Log($"  [{spec.id}] {spec.name}: {spec.weight:F2} ({percentage:F1}%)");
+            Debug.Log($"  [{spec.id}] {spec.chatName}: {spec.weight:F2} ({percentage:F1}%)");
         }
     }
 }

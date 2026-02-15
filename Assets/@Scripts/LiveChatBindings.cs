@@ -36,6 +36,6 @@ public sealed class LiveChatBindings : IDisposable
 
     private void HandleDonateButton()
     {
-        //_donationHandler.SubmitDonation();
+        Debug.Log("[LiveFlowController] DonationButton requested.");
     }
 }

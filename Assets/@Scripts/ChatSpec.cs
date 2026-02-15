@@ -1,6 +1,7 @@
 // ChatSpecSO.cs
 // 개별 채팅 스펙 데이터 (기획자가 Inspector에서 수정)
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "ChatSpec", menuName = "Live/Chat Spec", order = 200)]
 public sealed class ChatSpecSO : ScriptableObject
@@ -13,7 +14,7 @@ public sealed class ChatSpecSO : ScriptableObject
     public ChatEntryKind kind = ChatEntryKind.Chat;
     
     [Tooltip("발신자 이름 (비워두면 랜덤 생성)")]
-    public string name;
+    public string chatName;
     
     [TextArea(2, 5)]
     [Tooltip("메시지 내용")]
@@ -38,9 +39,9 @@ public sealed class ChatSpecSO : ScriptableObject
     private void OnValidate()
     {
         if (string.IsNullOrEmpty(id))
-            id = name.GetHashCode().ToString();
+            id = chatName.GetHashCode().ToString();
         
         if (kind == ChatEntryKind.Donation && donationAmount <= 0)
-            Debug.LogWarning($"[ChatSpecSO] {name}: Donation amount should be > 0", this);
+            Debug.LogWarning($"[ChatSpecSO] {chatName}: Donation amount should be > 0", this);
     }
 }
