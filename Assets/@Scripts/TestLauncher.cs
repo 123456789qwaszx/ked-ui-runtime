@@ -17,6 +17,8 @@ public class TestLauncher : MonoBehaviour
     
     [SerializeField] private KeyCode StartIdolChatKey = KeyCode.Alpha5;
     
+    [SerializeField] private KeyCode EndChatKey = KeyCode.Alpha6;
+    
     
     private void Update()
     {
@@ -31,6 +33,9 @@ public class TestLauncher : MonoBehaviour
         
         if (Input.GetKeyDown(StartIdolChatKey))
             StartIdolChat();
+        
+        if (Input.GetKeyDown(EndChatKey))
+            EndChat();
     }
     
     public void StartLive()
@@ -53,5 +58,16 @@ public class TestLauncher : MonoBehaviour
     public void StartIdolChat()
     {
         idolQueue.Play();
+    }
+
+    public void EndChat()
+    {
+        chatRail.Push(new ChatEntryData
+        {
+            kind = ChatEntryKind.System,
+            side = ChatEntrySide.Other,
+            name = "",
+            body = "방송을 종료합니다…",
+        });
     }
 }

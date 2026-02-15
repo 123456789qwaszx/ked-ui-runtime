@@ -1,12 +1,10 @@
+using System.Collections;
 using UnityEngine;
 
 public sealed class LiveFlowController : MonoBehaviour
 {
     private readonly UIBindingContext _ctx = new();
     
-    [Header("UI")]
-    [SerializeField] private LiveUIRoot liveUI;
-
     [Header("Identity")]
     [SerializeField] private string myName = "나";
     [SerializeField] private string idolName = "라비";
@@ -17,31 +15,29 @@ public sealed class LiveFlowController : MonoBehaviour
     [SerializeField]private ChatRail chatRail;
     [SerializeField]private IdolSpeechQueue idolQueue;
 
+    private LiveUIRoot bound;
 
     public void BindLiveUIRoot(LiveUIRoot liveUIRoot)
     {
+        if (!liveUIRoot) return;
+
+        if (bound && bound != liveUIRoot)
+            _ctx.Unbind(bound);
+
+        bound = liveUIRoot;
+
+        _ctx.Unbind(liveUIRoot);
         _ctx.Bind(liveUIRoot, l => l.OnExitRequested += HandleExit, l => l.OnExitRequested -= HandleExit);
         _ctx.Bind(liveUIRoot, l => l.OnDonateRequested += HandleDonateButton, l => l.OnDonateRequested -= HandleDonateButton);
     }
 
     private void OnDestroy()
     {
-        if (!liveUI) return;
-        liveUI.OnExitRequested -= HandleExit;
-        liveUI.OnDonateRequested -= HandleDonateButton;
+        _ctx.Dispose();
     }
 
     private void HandleExit()
     {
-        chatRail.Push(new ChatEntryData
-        {
-            kind = ChatEntryKind.System,
-            side = ChatEntrySide.Other,
-            name = "",
-            body = "방송을 종료합니다…",
-        });
-
-        // TODO: 타이틀로 복귀 호출
         Debug.Log("[LiveFlowController] Exit requested.", this);
     }
 
@@ -62,10 +58,10 @@ public sealed class LiveFlowController : MonoBehaviour
         StartCoroutine(DonationReactionRoutine(donorName, amount));
     }
 
-    private System.Collections.IEnumerator DonationReactionRoutine(string donorName, int amount)
+    private IEnumerator DonationReactionRoutine(string donorName, int amount)
     {
         // "반박자~1박" 느낌: 0.25~0.85초
-        float delay = UnityEngine.Random.Range(0.25f, 0.85f);
+        float delay = Random.Range(0.25f, 0.85f);
         yield return new WaitForSeconds(delay);
 
         // TODO: DonationSting 재생
