@@ -1750,10 +1750,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1559853397}
-  - component: {fileID: 1559853399}
   - component: {fileID: 1559853398}
   m_Layer: 0
-  m_Name: LiveFlowController
+  m_Name: LiveDevHarness
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1786,29 +1785,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eb4cfdbc4334f54c87b6142d53cf625, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveDevHarness
-  controller: {fileID: 1559853399}
+  donationHandler: {fileID: 1740886830}
   chatRail: {fileID: 815626185}
   scenario: {fileID: 11400000, guid: cb9e2fee6c80d9244afd3bba9bbdf078, type: 2}
   autoRunScenarioOnStart: 1
   enableAutoFeed: 0
   feedInterval: 0.33
---- !u!114 &1559853399
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1559853395}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d6485d7e0211ac4b8031ecc2fd419fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LiveFlowController
-  myName: "\uB098"
-  idolName: "\uB77C\uBE44"
-  quickDonateAmounts: e803000010270000a0860100
-  chatRail: {fileID: 815626185}
-  idolQueue: {fileID: 1759434155}
 --- !u!1 &1731713239
 GameObject:
   m_ObjectHideFlags: 0
@@ -1835,6 +1817,54 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 457.22256, y: 774.8849, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1740886829
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1740886831}
+  - component: {fileID: 1740886830}
+  m_Layer: 0
+  m_Name: DonationHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1740886830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1740886829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 941e1494dddec674f8910910fce648a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DonationHandler
+  chatRail: {fileID: 815626185}
+  idolQueue: {fileID: 1759434155}
+  minReactionDelay: 0.25
+  maxReactionDelay: 0.85
+--- !u!4 &1740886831
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1740886829}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.08031, y: 0, z: 4.16156}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2215,7 +2245,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a704f2cc801c90d4f98768168e4c1b43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestLauncher
-  liveFlowController: {fileID: 1559853399}
   chatRail: {fileID: 815626185}
   idolQueue: {fileID: 1759434155}
   liveKey: 49
@@ -2223,6 +2252,10 @@ MonoBehaviour:
   EnqueIdolChatKey: 52
   StartIdolChatKey: 53
   EndChatKey: 54
+  welcomeMessages:
+  - "\uC548\uB155! \uC624\uB298\uB3C4 \uC640\uC918\uC11C \uACE0\uB9C8\uC6CC!"
+  - "\uCC44\uD305\uC740 \uD734\uB300\uD3F0 \uD654\uBA74\uC5D0 \uC62C\uB77C\uC624\uB294
+    \uAC78\uB85C \uD14C\uC2A4\uD2B8 \uC911\uC774\uC57C."
 --- !u!4 &1912787949
 Transform:
   m_ObjectHideFlags: 0
@@ -2453,6 +2486,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2023633579}
   m_CullTransparentMesh: 1
+--- !u!1 &2087987989
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2087987990}
+  - component: {fileID: 2087987991}
+  m_Layer: 0
+  m_Name: LiveStreamBootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2087987990
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087987989}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2087987991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087987989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44a4233f009c45e4b85e7fb62e4959ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LiveStreamBootstrap
+  liveUI: {fileID: 1438907182}
+  donationHandler: {fileID: 1740886830}
+  liveDevHarness: {fileID: 1559853398}
+  testLauncher: {fileID: 1912787948}
 --- !u!1 &2133458278
 GameObject:
   m_ObjectHideFlags: 0
@@ -2625,3 +2706,5 @@ SceneRoots:
   - {fileID: 504259316}
   - {fileID: 1559853397}
   - {fileID: 1759434154}
+  - {fileID: 2087987990}
+  - {fileID: 1740886831}

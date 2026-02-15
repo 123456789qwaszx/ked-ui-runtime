@@ -1,14 +1,11 @@
-// LiveDevHarness.cs
-// Dev/Editor-only: 테스트 시나리오 실행 + 스트레스 테스트
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(LiveChatBindings))]
 public sealed class LiveDevHarness : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private LiveChatBindings controller;
+    [SerializeField] private DonationHandler donationHandler;
     [SerializeField] private ChatRail chatRail;
 
     [Header("Scenario Test")]
@@ -21,25 +18,7 @@ public sealed class LiveDevHarness : MonoBehaviour
 
     private Coroutine scenarioRoutine;
     private Coroutine autoFeedRoutine;
-
-    private void Reset()
-    {
-        controller = GetComponent<LiveChatBindings>();
-    }
-
-    private void Awake()
-    {
-        if (!controller)
-            controller = GetComponent<LiveChatBindings>();
-
-        if (!chatRail && controller)
-        {
-            var liveUI = GetComponentInChildren<LiveUIRoot>();
-            if (liveUI)
-                chatRail = liveUI.GetChatRail();
-        }
-    }
-
+    
     private void Start()
     {
         if (autoRunScenarioOnStart && scenario)
@@ -154,10 +133,10 @@ public sealed class LiveDevHarness : MonoBehaviour
                 break;
 
             case ChatEntryKind.Donation:
-                // Donation은 Controller 통해서 처리 (reaction 포함)
-                if (controller && step.isMy)
+                // Donation은 Handler 통해서 처리 (reaction 포함)
+                if (step.isMy && donationHandler)
                 {
-                    controller.SubmitDonation(step.donationAmount, step.name);
+                    donationHandler.SubmitDonation();
                 }
                 else
                 {
