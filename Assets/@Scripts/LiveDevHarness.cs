@@ -4,11 +4,11 @@
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(LiveFlowController))]
+[RequireComponent(typeof(LiveChatBindings))]
 public sealed class LiveDevHarness : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private LiveFlowController controller;
+    [SerializeField] private LiveChatBindings controller;
     [SerializeField] private ChatRail chatRail;
 
     [Header("Scenario Test")]
@@ -24,13 +24,13 @@ public sealed class LiveDevHarness : MonoBehaviour
 
     private void Reset()
     {
-        controller = GetComponent<LiveFlowController>();
+        controller = GetComponent<LiveChatBindings>();
     }
 
     private void Awake()
     {
         if (!controller)
-            controller = GetComponent<LiveFlowController>();
+            controller = GetComponent<LiveChatBindings>();
 
         if (!chatRail && controller)
         {

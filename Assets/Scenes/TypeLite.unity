@@ -1804,7 +1804,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d6485d7e0211ac4b8031ecc2fd419fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveFlowController
-  liveUI: {fileID: 1438907182}
   myName: "\uB098"
   idolName: "\uB77C\uBE44"
   quickDonateAmounts: e803000010270000a0860100
@@ -2223,6 +2222,7 @@ MonoBehaviour:
   liveStartKey: 51
   EnqueIdolChatKey: 52
   StartIdolChatKey: 53
+  EndChatKey: 54
 --- !u!4 &1912787949
 Transform:
   m_ObjectHideFlags: 0

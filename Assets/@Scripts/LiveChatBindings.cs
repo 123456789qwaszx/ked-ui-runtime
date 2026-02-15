@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public sealed class LiveFlowController : MonoBehaviour
+public sealed class LiveChatBindings : MonoBehaviour
 {
     private readonly UIBindingContext _ctx = new();
     

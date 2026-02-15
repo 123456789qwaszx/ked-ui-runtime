@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TestLauncher : MonoBehaviour
 {
-    [SerializeField]private LiveFlowController liveFlowController;
+    [SerializeField]private LiveChatBindings liveFlowController;
     
     [SerializeField]private ChatRail chatRail;
     [SerializeField]private IdolSpeechQueue idolQueue;
