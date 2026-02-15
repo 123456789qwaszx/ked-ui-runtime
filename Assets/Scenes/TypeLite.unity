@@ -1060,8 +1060,8 @@ MonoBehaviour:
   scrollRect: {fileID: 846867005}
   content: {fileID: 1874222590}
   entryPrefab: {fileID: 7587269143477995467, guid: 5afeab3c4c0c40644b200ba05bb11df9, type: 3}
-  warmupCount: 8
-  maxEntries: 10
+  warmupCount: 1
+  maxEntries: 3
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1808,6 +1808,8 @@ MonoBehaviour:
   myName: "\uB098"
   idolName: "\uB77C\uBE44"
   quickDonateAmounts: e803000010270000a0860100
+  chatRail: {fileID: 815626185}
+  idolQueue: {fileID: 1759434155}
 --- !u!1 &1731713239
 GameObject:
   m_ObjectHideFlags: 0
@@ -1916,6 +1918,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IdolSpeechQueue
   minInterval: 1.2
   maxInterval: 2
+  chatRail: {fileID: 815626185}
 --- !u!1 &1872200006
 GameObject:
   m_ObjectHideFlags: 0
@@ -2213,7 +2216,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a704f2cc801c90d4f98768168e4c1b43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestLauncher
-  liveKey: 52
+  liveFlowController: {fileID: 1559853399}
+  chatRail: {fileID: 815626185}
+  idolQueue: {fileID: 1759434155}
+  liveKey: 49
+  liveStartKey: 51
+  EnqueIdolChatKey: 52
+  StartIdolChatKey: 53
 --- !u!4 &1912787949
 Transform:
   m_ObjectHideFlags: 0

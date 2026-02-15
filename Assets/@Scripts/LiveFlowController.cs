@@ -2,6 +2,8 @@ using UnityEngine;
 
 public sealed class LiveFlowController : MonoBehaviour
 {
+    private readonly UIBindingContext _ctx = new();
+    
     [Header("UI")]
     [SerializeField] private LiveUIRoot liveUI;
 
@@ -12,41 +14,14 @@ public sealed class LiveFlowController : MonoBehaviour
     [Header("Donation")]
     [SerializeField] private int[] quickDonateAmounts = { 1000, 10000, 100000 };
 
-    private ChatRail chatRail;
-    private IdolSpeechQueue idolQueue;
+    [SerializeField]private ChatRail chatRail;
+    [SerializeField]private IdolSpeechQueue idolQueue;
 
-    private void Awake()
+
+    public void BindLiveUIRoot(LiveUIRoot liveUIRoot)
     {
-        if (!liveUI)
-        {
-            Debug.LogError("[LiveFlowController] liveUI is null.", this);
-            enabled = false;
-            return;
-        }
-
-        chatRail = liveUI.GetChatRail();
-        if (!chatRail)
-        {
-            Debug.LogError("[LiveFlowController] ChatRail missing.", this);
-            enabled = false;
-            return;
-        }
-
-        idolQueue = GetComponent<IdolSpeechQueue>();
-        if (!idolQueue)
-            idolQueue = gameObject.AddComponent<IdolSpeechQueue>();
-
-        idolQueue.Bind(chatRail);
-
-        // UI events
-        liveUI.OnExitRequested += HandleExit;
-        liveUI.OnDonateRequested += HandleDonateButton;
-
-        // 첫 진입 연출
-        chatRail.PushIdol("…방송을 시작합니다.");
-        idolQueue.Enqueue("안녕! 오늘도 와줘서 고마워!");
-        idolQueue.Enqueue("채팅은 휴대폰 화면에 올라오는 걸로 테스트 중이야.");
-        idolQueue.Play();
+        _ctx.Bind(liveUIRoot, l => l.OnExitRequested += HandleExit, l => l.OnExitRequested -= HandleExit);
+        _ctx.Bind(liveUIRoot, l => l.OnDonateRequested += HandleDonateButton, l => l.OnDonateRequested -= HandleDonateButton);
     }
 
     private void OnDestroy()

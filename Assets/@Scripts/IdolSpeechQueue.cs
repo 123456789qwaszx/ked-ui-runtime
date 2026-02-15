@@ -9,15 +9,10 @@ public sealed class IdolSpeechQueue : MonoBehaviour
     [SerializeField] private float maxInterval = 2.0f;
 
     private readonly Queue<string> queue = new();
-    private ChatRail chatRail;
+    [SerializeField]private ChatRail chatRail;
 
     private Coroutine routine;
     private bool paused;
-
-    public void Bind(ChatRail rail)
-    {
-        chatRail = rail;
-    }
 
     public void Enqueue(string line)
     {
