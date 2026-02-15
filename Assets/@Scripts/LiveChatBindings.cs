@@ -5,8 +5,13 @@ public sealed class LiveChatBindings : IDisposable
 {
     private readonly UIBindingContext _ctx = new();
 
+    private readonly ChatEngine _engine;
     private LiveUIRoot bound;
 
+    public LiveChatBindings(ChatEngine engine)
+    {
+        _engine = engine;
+    }
 
     public void BindLiveUIRoot(LiveUIRoot liveUIRoot)
     {
@@ -31,11 +36,13 @@ public sealed class LiveChatBindings : IDisposable
     private void HandleExit()
     {
         // TODO: 씬 전환, 저장, 통계 등
+        _engine.StopEngine();
         Debug.Log("[LiveFlowController] Exit requested.");
     }
 
     private void HandleDonateButton()
     {
+        _engine.PushSignals(new ChatSignals(ChatSignalFlags.DonationHappened, donationAmount: 10000));
         Debug.Log("[LiveFlowController] DonationButton requested.");
     }
 }

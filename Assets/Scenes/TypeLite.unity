@@ -1308,9 +1308,9 @@ MonoBehaviour:
   contentRoot: {fileID: 1874222590}
   poolRoot: {fileID: 1478504792}
   entryPrefab: {fileID: 7587269143477995467, guid: 5afeab3c4c0c40644b200ba05bb11df9, type: 3}
-  maxEntries: 120
-  consumeBudgetPerFrame: 8
-  preloadPool: 40
+  maxEntries: 4
+  consumeBudgetPerFrame: 4
+  preloadPool: 10
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -2119,9 +2119,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c994a7a56acd6554da4c42131e21e55e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatEngine
-  profile: {fileID: 0}
-  contentDb: {fileID: 0}
-  rail: {fileID: 0}
+  profile: {fileID: 11400000, guid: 722e7018a40956441a480dfb07a6102f, type: 2}
+  contentDb: {fileID: 11400000, guid: cc1595d516499c94882610aff868fc7e, type: 2}
+  rail: {fileID: 815626185}
   autoStart: 1
 --- !u!1 &1411811292
 GameObject:
@@ -2207,6 +2207,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1438907181}
+  - component: {fileID: 1438907183}
   - component: {fileID: 1438907182}
   m_Layer: 5
   m_Name: LiveUIRoot
@@ -2250,6 +2251,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiveUIRoot
   chatRail: {fileID: 815626185}
+--- !u!225 &1438907183
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438907180}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1478504791
 GameObject:
   m_ObjectHideFlags: 0
@@ -2285,6 +2298,53 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1498972286
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1498972287}
+  - component: {fileID: 1498972288}
+  m_Layer: 0
+  m_Name: LiveStreamBootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1498972287
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498972286}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -273.82544, y: 442.38565, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1498972288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498972286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44a4233f009c45e4b85e7fb62e4959ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LiveStreamBootstrap
+  liveUI: {fileID: 1438907182}
+  testLauncher: {fileID: 1912787948}
+  chatEngine: {fileID: 1404630326}
 --- !u!1 &1505517351
 GameObject:
   m_ObjectHideFlags: 0
@@ -2893,15 +2953,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a704f2cc801c90d4f98768168e4c1b43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestLauncher
-  chatRail: {fileID: 815626185}
   liveKey: 49
-  liveStartKey: 51
-  endChatKey: 54
-  _init: 0
-  welcomeMessages:
-  - "\uC548\uB155! \uC624\uB298\uB3C4 \uC640\uC918\uC11C \uACE0\uB9C8\uC6CC!"
-  - "\uCC44\uD305\uC740 \uD734\uB300\uD3F0 \uD654\uBA74\uC5D0 \uC62C\uB77C\uC624\uB294
-    \uAC78\uB85C \uD14C\uC2A4\uD2B8 \uC911\uC774\uC57C."
 --- !u!4 &1912787949
 Transform:
   m_ObjectHideFlags: 0
@@ -3431,3 +3483,4 @@ SceneRoots:
   - {fileID: 9155967952251032124}
   - {fileID: 504259316}
   - {fileID: 1404630325}
+  - {fileID: 1498972287}
