@@ -153,4 +153,9 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
         => _deps.recorder.RecordDecision(kind, optionId, accepted);
+    
+    public BroadcastEventLog GetLastSavedEventLogOrNull()
+    {
+        return _deps.repository != null ? _deps.repository.GetLastOrNull() : null;
+    }
 }
