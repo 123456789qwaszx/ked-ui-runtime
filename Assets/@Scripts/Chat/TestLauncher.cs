@@ -9,9 +9,13 @@ public class TestLauncher : MonoBehaviour
     [SerializeField] private KeyCode liveKey = KeyCode.Alpha1;
     [SerializeField] private KeyCode endKey = KeyCode.Alpha2;
     [SerializeField] private KeyCode dumpKey = KeyCode.Alpha3;
+    [SerializeField] private KeyCode nextPhaseKey = KeyCode.Alpha4;
     
     //[SerializeField] private KeyCode liveStartKey = KeyCode.Alpha3;
     //[SerializeField] private KeyCode endChatKey = KeyCode.Alpha6;
+    
+    private int _phaseIndex;
+    private bool _liveActive;
 
     private bool _init;
 
@@ -37,6 +41,9 @@ public class TestLauncher : MonoBehaviour
         
         if (Input.GetKeyDown(dumpKey))
             DumpLast();
+        
+        if (Input.GetKeyDown(nextPhaseKey))
+            NextPhase();
     }
 
     public void StartLive()
@@ -45,26 +52,33 @@ public class TestLauncher : MonoBehaviour
         LiveUIRoot liveUIRoot = UIManager.Instance.GetUI<LiveUIRoot>();
         _liveFlowController.BindLiveUIRoot(liveUIRoot);
 
-        // 1) 엔진 켜기
         _chatEngine.StartEngine();
 
-        // 2) 방송 세션 열기 + 첫 Phase 열기 (테스트용 하드코딩 OK)
         double now = Time.timeAsDouble;
-        _chatEngine.BeginEvent(runId: "run_test_001", eventId: "live_test_01", eventIndex: 0, nowSec: now);
-        _chatEngine.BeginPhase(phaseIndex: 0, phaseId: "perf_01", profileKeyAtEnter: "Opening", nowSec: now);
+        _chatEngine.BeginEvent("run_test_001", "live_test_01", 0, now);
+
+        _phaseIndex = 0;
+        _liveActive = true;
+
+        _chatEngine.BeginPhase(_phaseIndex, phaseId: "perf_01", profileKeyAtEnter: "Opening", nowSec: now);
     }
 
     private void EndLive()
     {
+        if (!_liveActive)
+            return;
+
         double now = Time.timeAsDouble;
 
-        // Phase 닫고 Event 닫기
         _chatEngine.EndPhase(now);
         _chatEngine.EndEvent(now);
 
         _chatEngine.StopEngine();
+
+        _liveActive = false;
         Debug.Log("[TestLauncher] Live ended and saved.");
     }
+
     
     private void DumpLast()
     {
@@ -107,4 +121,36 @@ public class TestLauncher : MonoBehaviour
             );
         }
     }
+    
+    private void NextPhase()
+    {
+        if (!_liveActive)
+        {
+            Debug.Log("[TestLauncher] NextPhase ignored: live is not active.");
+            return;
+        }
+
+        double now = Time.timeAsDouble;
+
+        // 1) 인터미션 선택을 "현재 phase에" 기록 (EndPhase 전에!)
+        _chatEngine.RecordDecision(
+            PhaseDecisionKind.BuildTrust,
+            optionId: "choice_trust_01",
+            accepted: true
+        );
+
+        // 2) 현재 Phase 종료
+        _chatEngine.EndPhase(now);
+
+        // 3) 다음 Phase 시작
+        _phaseIndex += 1;
+
+        string nextPhaseId = _phaseIndex == 1 ? "perf_02" : $"perf_{_phaseIndex + 1:00}";
+        string nextProfile = _phaseIndex == 1 ? "Talk" : "Talk";
+
+        _chatEngine.BeginPhase(_phaseIndex, nextPhaseId, nextProfile, now);
+
+        Debug.Log($"[TestLauncher] NextPhase -> phaseIndex={_phaseIndex}");
+    }
+
 }
