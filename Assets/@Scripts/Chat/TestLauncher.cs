@@ -14,11 +14,14 @@ public class TestLauncher : MonoBehaviour
     [SerializeField] private KeyCode dumpKey = KeyCode.Alpha3;
     [SerializeField] private KeyCode nextPhaseKey = KeyCode.Alpha4;
     
-    //[SerializeField] private KeyCode liveStartKey = KeyCode.Alpha3;
-    //[SerializeField] private KeyCode endChatKey = KeyCode.Alpha6;
     
+    [SerializeField] private bool autoAdvancePhase = true;
+
     private int _phaseIndex;
     private bool _liveActive;
+    
+    private BroadcastScenario _scenario;
+    private double _phaseStartedAt;
 
     private bool _init;
 
@@ -30,6 +33,8 @@ public class TestLauncher : MonoBehaviour
         _chatEngine = chatEngine;
         
         _profileResolver = new SimplePhaseProfileResolver();
+        _scenario = BroadcastScenario.CreateTestDefault();
+        
         _init = true;
     }
 
@@ -49,6 +54,64 @@ public class TestLauncher : MonoBehaviour
         
         if (Input.GetKeyDown(nextPhaseKey))
             NextPhase();
+        
+        if (_liveActive && autoAdvancePhase)
+            AutoTick();
+    }
+    
+    private void AutoTick()
+    {
+        if (!_scenario.TryGetPhase(_phaseIndex, out PhaseSpec current))
+            return;
+
+        if (current.durationSec <= 0f)
+            return;
+
+        double now = Time.timeAsDouble;
+        double elapsed = now - _phaseStartedAt;
+
+        if (elapsed >= current.durationSec)
+            AdvancePhaseAuto();
+    }
+    
+    private void AdvancePhaseAuto()
+    {
+        // 마지막 Phase면 종료
+        if (_scenario.PhaseCount <= 0 || _phaseIndex >= _scenario.PhaseCount - 1)
+        {
+            EndLive();
+            return;
+        }
+
+        double now = Time.timeAsDouble;
+
+        // (테스트) 인터미션이 있는 Phase에서만 decision 기록 + 프로필 갱신
+        if (_scenario.TryGetPhase(_phaseIndex, out PhaseSpec current) && current.hasIntermission)
+        {
+            PhaseDecisionKind kind = PhaseDecisionKind.BuildTrust;
+            _chatEngine.RecordDecision(kind, "auto_choice_01", true);
+            _currentProfileKey = _profileResolver.ResolveNextProfileKey(_currentProfileKey, kind);
+        }
+
+        _chatEngine.EndPhase(now);
+
+        _phaseIndex++;
+
+        if (!_scenario.TryGetPhase(_phaseIndex, out PhaseSpec next))
+        {
+            EndLive();
+            return;
+        }
+
+        // 선택이 없었으면 baseProfileKey로 자연스럽게 리셋
+        // 선택이 있었으면 resolver 결과(_currentProfileKey)가 유지됨
+        if (!current.hasIntermission)
+            _currentProfileKey = next.baseProfileKey;
+
+        _chatEngine.BeginPhase(_phaseIndex, next.phaseId, _currentProfileKey, now);
+        _phaseStartedAt = now;
+
+        Debug.Log($"[TestLauncher] AutoPhase -> idx={_phaseIndex}, phaseId={next.phaseId}, profile={_currentProfileKey}");
     }
 
     public void StartLive()
@@ -59,15 +122,22 @@ public class TestLauncher : MonoBehaviour
 
         _chatEngine.StartEngine();
 
-        double now = Time.timeAsDouble;
-        _chatEngine.BeginEvent("run_test_001", "live_test_01", 0, now);
-
         _phaseIndex = 0;
         _liveActive = true;
 
-        _currentProfileKey = "Opening";
-        _chatEngine.BeginPhase(_phaseIndex, "perf_01", _currentProfileKey, now);
-        //_chatEngine.BeginPhase(_phaseIndex, phaseId: "perf_01", profileKeyAtEnter: "Opening", nowSec: now);
+        if (!_scenario.TryGetPhase(_phaseIndex, out PhaseSpec p0))
+        {
+            Debug.LogError("[TestLauncher] Scenario has no phases.");
+            return;
+        }
+
+        _currentProfileKey = p0.baseProfileKey;
+
+        double now = Time.timeAsDouble;
+        _chatEngine.BeginEvent("run_test_001", _scenario.scenarioId, 0, now);
+        _chatEngine.BeginPhase(_phaseIndex, p0.phaseId, _currentProfileKey, now);
+
+        _phaseStartedAt = now;
     }
 
     private void EndLive()
