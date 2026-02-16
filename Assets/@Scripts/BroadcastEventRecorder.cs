@@ -1,0 +1,301 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
+{
+    private BroadcastEventLog _log;
+    private readonly List<PhaseLog> _phases = new List<PhaseLog>(capacity: 4);
+
+    private bool _eventActive;
+    private bool _phaseActive;
+
+    private int _currentPhaseIndex = -1;
+    private PhaseLog _currentPhase;
+
+    public bool IsEventActive => _eventActive;
+    public bool IsPhaseActive => _phaseActive;
+
+    public void BeginEvent(string runId, string eventId, int eventIndex, double startedAtSec)
+    {
+        // 중복 시작 방지
+        if (_eventActive)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] BeginEvent called while event is active. Resetting previous state.");
+            ResetInternal();
+        }
+
+        _log = new BroadcastEventLog
+        {
+            runId = runId,
+            eventId = eventId,
+            eventIndex = eventIndex,
+            startedAtSec = startedAtSec,
+            endedAtSec = double.NaN,
+            phases = null,
+            indicesAtEnd = default
+        };
+
+        _phases.Clear();
+        _eventActive = true;
+        _phaseActive = false;
+        _currentPhaseIndex = -1;
+    }
+
+    public void EndEvent(double endedAtSec)
+    {
+        if (!_eventActive)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] EndEvent called but event is not active.");
+            return;
+        }
+
+        // Phase가 열려있으면 자동 마감(안전장치)
+        if (_phaseActive)
+        {
+            EndPhase(endedAtSec);
+        }
+
+        _log.endedAtSec = endedAtSec;
+        _log.phases = _phases.ToArray();
+
+        _eventActive = false;
+    }
+
+    public void BeginPhase(int phaseIndex, string phaseId, string profileKeyAtEnter, double startedAtSec)
+    {
+        EnsureEventActive();
+
+        if (_phaseActive)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] BeginPhase called while phase is active. Auto-ending previous phase.");
+            EndPhase(startedAtSec);
+        }
+
+        _currentPhaseIndex = phaseIndex;
+        _currentPhase = new PhaseLog
+        {
+            phaseIndex = phaseIndex,
+            phaseId = phaseId,
+            profileKeyAtEnter = profileKeyAtEnter,
+            startedAtSec = startedAtSec,
+            endedAtSec = double.NaN,
+
+            donationCount = 0,
+            donationSum = 0,
+
+            emojiCount = 0,
+            chatLineCount = 0,
+
+            instinctCount = 0,
+            analysisCount = 0,
+            chaosCount = 0,
+
+            idolPositiveReact = 0,
+            idolNegativeReact = 0,
+            idolNeutralReact = 0,
+
+            hasDecision = false,
+            decision = default
+        };
+
+        _phaseActive = true;
+    }
+
+    public void EndPhase(double endedAtSec)
+    {
+        if (!_phaseActive)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] EndPhase called but phase is not active.");
+            return;
+        }
+
+        _currentPhase.endedAtSec = endedAtSec;
+        _phases.Add(_currentPhase);
+
+        _phaseActive = false;
+        _currentPhaseIndex = -1;
+        _currentPhase = default;
+    }
+
+    public void RecordDonation(int amount)
+    {
+        EnsurePhaseActive();
+
+        if (amount <= 0)
+        {
+            Debug.LogWarning($"[BroadcastEventRecorder] RecordDonation ignored: amount <= 0 ({amount})");
+            return;
+        }
+
+        // Phase
+        _currentPhase.donationCount += 1;
+        _currentPhase.donationSum += amount;
+
+        // Event totals
+        _log.donationCountTotal += 1;
+        _log.donationSumTotal += amount;
+    }
+
+    public void RecordEmoji(int emojiId)
+    {
+        EnsurePhaseActive();
+
+        // P0: 종류별 카운트는 필요 없고 total만 증가
+        _currentPhase.emojiCount += 1;
+        _log.emojiCountTotal += 1;
+
+        // emojiId는 P1에서 “종류별 통계” 필요해질 때 사용
+        _ = emojiId;
+    }
+
+    public void RecordChat(ChatTag tag, string optionId, IdolReaction reaction)
+    {
+        EnsurePhaseActive();
+
+        _currentPhase.chatLineCount += 1;
+        _log.chatLineCountTotal += 1;
+
+        // Tag
+        switch (tag)
+        {
+            case ChatTag.Instinct:
+                _currentPhase.instinctCount += 1;
+                _log.instinctCountTotal += 1;
+                break;
+            case ChatTag.Analysis:
+                _currentPhase.analysisCount += 1;
+                _log.analysisCountTotal += 1;
+                break;
+            case ChatTag.Chaos:
+                _currentPhase.chaosCount += 1;
+                _log.chaosCountTotal += 1;
+                break;
+            default:
+                Debug.LogWarning($"[BroadcastEventRecorder] Unknown ChatTag: {tag}");
+                break;
+        }
+
+        // Reaction
+        switch (reaction)
+        {
+            case IdolReaction.Positive:
+                _currentPhase.idolPositiveReact += 1;
+                _log.idolPositiveReactTotal += 1;
+                break;
+            case IdolReaction.Negative:
+                _currentPhase.idolNegativeReact += 1;
+                _log.idolNegativeReactTotal += 1;
+                break;
+            case IdolReaction.Neutral:
+                _currentPhase.idolNeutralReact += 1;
+                _log.idolNeutralReactTotal += 1;
+                break;
+            default:
+                Debug.LogWarning($"[BroadcastEventRecorder] Unknown IdolReaction: {reaction}");
+                break;
+        }
+
+        // optionId는 P1에서 “문구별 통계/리플레이” 필요해질 때 사용
+        _ = optionId;
+    }
+
+    public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
+    {
+        EnsurePhaseActive();
+
+        // Phase당 0~1회 규칙 (두 번 들어오면 덮어씀 + 경고)
+        if (_currentPhase.hasDecision)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] RecordDecision called multiple times in one phase. Overwriting previous decision.");
+        }
+
+        _currentPhase.hasDecision = true;
+        _currentPhase.decision = new PhaseDecisionLog
+        {
+            kind = kind,
+            optionId = optionId,
+            accepted = accepted
+        };
+    }
+
+    public BroadcastEventLog BuildLog()
+    {
+        if (_log == null)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] BuildLog called but log is null. Did you call BeginEvent?");
+            return null;
+        }
+
+        // EndEvent 호출 전이라면, 현재 상태 스냅샷으로 phases 배열을 만들어서 돌려줌(디버그 편의)
+        if (_eventActive)
+        {
+            var snapshot = CloneLogShallow(_log);
+
+            // 진행 중 Phase가 있으면 임시로 포함
+            var list = new List<PhaseLog>(_phases);
+            if (_phaseActive)
+                list.Add(_currentPhase);
+
+            snapshot.phases = list.ToArray();
+            return snapshot;
+        }
+
+        // EndEvent가 이미 호출되었다면 _log.phases가 확정되어 있음
+        return _log;
+    }
+
+    private static BroadcastEventLog CloneLogShallow(BroadcastEventLog src)
+    {
+        if (src == null) return null;
+
+        return new BroadcastEventLog
+        {
+            runId = src.runId,
+            eventId = src.eventId,
+            eventIndex = src.eventIndex,
+            startedAtSec = src.startedAtSec,
+            endedAtSec = src.endedAtSec,
+
+            donationCountTotal = src.donationCountTotal,
+            donationSumTotal = src.donationSumTotal,
+
+            emojiCountTotal = src.emojiCountTotal,
+            chatLineCountTotal = src.chatLineCountTotal,
+
+            instinctCountTotal = src.instinctCountTotal,
+            analysisCountTotal = src.analysisCountTotal,
+            chaosCountTotal = src.chaosCountTotal,
+
+            idolPositiveReactTotal = src.idolPositiveReactTotal,
+            idolNegativeReactTotal = src.idolNegativeReactTotal,
+            idolNeutralReactTotal = src.idolNeutralReactTotal,
+
+            phases = src.phases, // 주의: snapshot에서는 바로 덮어씌움
+            indicesAtEnd = src.indicesAtEnd
+        };
+    }
+
+    private void EnsureEventActive()
+    {
+        if (!_eventActive)
+            throw new InvalidOperationException("[BroadcastEventRecorder] Event is not active. Call BeginEvent first.");
+    }
+
+    private void EnsurePhaseActive()
+    {
+        EnsureEventActive();
+        if (!_phaseActive)
+            throw new InvalidOperationException("[BroadcastEventRecorder] Phase is not active. Call BeginPhase first.");
+    }
+
+    private void ResetInternal()
+    {
+        _log = null;
+        _phases.Clear();
+        _eventActive = false;
+        _phaseActive = false;
+        _currentPhaseIndex = -1;
+        _currentPhase = default;
+    }
+}

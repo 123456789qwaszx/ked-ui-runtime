@@ -16,11 +16,17 @@ public sealed class ChatEngine : MonoBehaviour
     private UnityChatRng _rng;
     private IChatPayloadSampler _chatPayloadSampler;
     private IChatRenderResolver _chatRenderResolver;
+    
+    // ==== BroadcastEvent ====
+    private ChatEngineDeps _deps;
+    private BroadcastEventSession _session;
 
     private bool _running;
 
-    private void Awake()
+    public void Initialize(ChatEngineDeps deps)
     {
+        _deps = deps;
+        
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
 
         _chatQueue = new Queue<ChatEvent>(256);
@@ -112,4 +118,38 @@ public sealed class ChatEngine : MonoBehaviour
         
         _chatEngineCore.Tick(profile, _chatEngineRuntime, Time.deltaTime, _chatQueue);
     }
+    
+    // ==== BroadcastEvent API====
+    public void BeginEvent(string runId, string eventId, int eventIndex, double nowSec)
+    {
+        _session = new BroadcastEventSession(runId, eventId, eventIndex, _deps.recorder);
+        _session.Begin(nowSec);
+    }
+
+    public void EndEvent(double nowSec)
+    {
+        if (_session == null) return;
+        var log = _session.End(nowSec);
+        _deps.repository.Add(log);
+        _session = null;
+    }
+
+    public void RecordDonation(int amount) => _deps.recorder.RecordDonation(amount);
+    public void RecordEmoji(int emojiId) => _deps.recorder.RecordEmoji(emojiId);
+
+    public IdolReaction SubmitChat(ChatTag tag, string optionId)
+    {
+        var reaction = _deps.idolReactor.React(tag, optionId);
+        _deps.recorder.RecordChat(tag, optionId, reaction);
+        return reaction;
+    }
+
+    public void BeginPhase(int phaseIndex, string phaseId, string profileKeyAtEnter, double nowSec)
+        => _deps.recorder.BeginPhase(phaseIndex, phaseId, profileKeyAtEnter, nowSec);
+
+    public void EndPhase(double nowSec) => _deps.recorder.EndPhase(nowSec);
+
+    public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
+        => _deps.recorder.RecordDecision(kind, optionId, accepted);
+    
 }

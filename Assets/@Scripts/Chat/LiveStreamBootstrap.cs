@@ -7,15 +7,28 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     [SerializeField] private TestLauncher testLauncher;
     [SerializeField] private ChatEngine chatEngine;
 
-    LiveChatBindings _liveChatBindings;
-    
+    private LiveChatBindings _liveChatBindings;
+
+    private IBroadcastLogRepository _repo;
+    private IBroadcastEventRecorder _recorder;
+    private IIdolReactor _idol;
+
     private void Awake()
     {
-        _liveChatBindings = new (chatEngine);
+        _repo = new InMemoryBroadcastLogRepository();
+        _recorder = new BroadcastEventRecorder();
+        _idol = new SimpleIdolReactor();
+
+        ChatEngineDeps deps = new (_repo, _recorder, _idol);
+
+        chatEngine.Initialize(deps);
+
+        _liveChatBindings = new LiveChatBindings(chatEngine);
         _liveChatBindings.BindLiveUIRoot(liveUI);
-        
+
         testLauncher.Initialize(_liveChatBindings, chatEngine);
     }
+
     private void OnDestroy()
     {
         _liveChatBindings?.Dispose();
