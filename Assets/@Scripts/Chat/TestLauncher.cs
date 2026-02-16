@@ -4,6 +4,9 @@ public class TestLauncher : MonoBehaviour
 {
     private LiveChatBindings _liveFlowController;
     private ChatEngine _chatEngine;
+    private IPhaseProfileResolver _profileResolver;
+    
+    [SerializeField] private string _currentProfileKey;
 
     [Tooltip("LiveUI")]
     [SerializeField] private KeyCode liveKey = KeyCode.Alpha1;
@@ -25,6 +28,8 @@ public class TestLauncher : MonoBehaviour
 
         _liveFlowController = liveChatBindings;
         _chatEngine = chatEngine;
+        
+        _profileResolver = new SimplePhaseProfileResolver();
         _init = true;
     }
 
@@ -60,7 +65,9 @@ public class TestLauncher : MonoBehaviour
         _phaseIndex = 0;
         _liveActive = true;
 
-        _chatEngine.BeginPhase(_phaseIndex, phaseId: "perf_01", profileKeyAtEnter: "Opening", nowSec: now);
+        _currentProfileKey = "Opening";
+        _chatEngine.BeginPhase(_phaseIndex, "perf_01", _currentProfileKey, now);
+        //_chatEngine.BeginPhase(_phaseIndex, phaseId: "perf_01", profileKeyAtEnter: "Opening", nowSec: now);
     }
 
     private void EndLive()
@@ -76,8 +83,12 @@ public class TestLauncher : MonoBehaviour
         _chatEngine.StopEngine();
 
         _liveActive = false;
+        _phaseIndex = 0;
+        _currentProfileKey = null;
+
         Debug.Log("[TestLauncher] Live ended and saved.");
     }
+
 
     
     private void DumpLast()
@@ -132,25 +143,23 @@ public class TestLauncher : MonoBehaviour
 
         double now = Time.timeAsDouble;
 
-        // 1) 인터미션 선택을 "현재 phase에" 기록 (EndPhase 전에!)
-        _chatEngine.RecordDecision(
-            PhaseDecisionKind.BuildTrust,
-            optionId: "choice_trust_01",
-            accepted: true
-        );
+        // 1) 이번 인터미션 선택(테스트용)
+        PhaseDecisionKind kind = PhaseDecisionKind.BuildTrust;
+        string optionId = "choice_trust_01";
 
-        // 2) 현재 Phase 종료
+        // 2) 현재 Phase에 decision 기록 (EndPhase 전에!)
+        _chatEngine.RecordDecision(kind, optionId, accepted: true);
+
+        // 3) 다음 profileKey 결정
+        _currentProfileKey = _profileResolver.ResolveNextProfileKey(_currentProfileKey, kind);
+
+        // 4) 현재 Phase 종료 후 다음 Phase 시작
         _chatEngine.EndPhase(now);
-
-        // 3) 다음 Phase 시작
-        _phaseIndex += 1;
+        _phaseIndex++;
 
         string nextPhaseId = _phaseIndex == 1 ? "perf_02" : $"perf_{_phaseIndex + 1:00}";
-        string nextProfile = _phaseIndex == 1 ? "Talk" : "Talk";
+        _chatEngine.BeginPhase(_phaseIndex, nextPhaseId, _currentProfileKey, now);
 
-        _chatEngine.BeginPhase(_phaseIndex, nextPhaseId, nextProfile, now);
-
-        Debug.Log($"[TestLauncher] NextPhase -> phaseIndex={_phaseIndex}");
+        Debug.Log($"[TestLauncher] NextPhase -> phaseIndex={_phaseIndex}, profile={_currentProfileKey}");
     }
-
 }
