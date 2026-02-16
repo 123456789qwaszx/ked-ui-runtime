@@ -128,8 +128,10 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void EndEvent(double nowSec)
     {
-        if (_session == null) return;
-        var log = _session.End(nowSec);
+        if (_session == null)
+            return;
+        
+        BroadcastEventLog log = _session.End(nowSec);
         _deps.repository.Add(log);
         _session = null;
     }
@@ -139,7 +141,7 @@ public sealed class ChatEngine : MonoBehaviour
 
     public IdolReaction SubmitChat(ChatTag tag, string optionId)
     {
-        var reaction = _deps.idolReactor.React(tag, optionId);
+        IdolReaction reaction = _deps.idolReactor.React(tag, optionId);
         _deps.recorder.RecordChat(tag, optionId, reaction);
         return reaction;
     }
@@ -151,5 +153,4 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
         => _deps.recorder.RecordDecision(kind, optionId, accepted);
-    
 }

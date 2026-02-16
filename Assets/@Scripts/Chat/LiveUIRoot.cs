@@ -8,6 +8,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 {
     public event Action OnExitRequested;
     public event Action OnDonateRequested;
+    public event Action OnSendEmojiRequested;
+    public event Action OnSendChatRequested;
 
     #region Refs
 
@@ -24,6 +26,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
         TopLeft_Root,
         ExitButton_Button,
         DonateButton_Button,
+        SendEmojiButton_Button,
+        SendChatButton_Button,
 
         // ---- Optional: overlay dim ----
         OverlayDim_Image,
@@ -39,6 +43,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
     private Button exitButton;
     private Button donateButton;
+    private Button sendEmojiButton;
+    private Button sendChatButton;
 
     private Image overlayDim;
 
@@ -60,6 +66,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
         exitButton = View.Button(Refs.ExitButton_Button);
         donateButton = View.Button(Refs.DonateButton_Button);
+        sendEmojiButton = View.Button(Refs.SendEmojiButton_Button);
+        sendChatButton  = View.Button(Refs.SendChatButton_Button);
 
         overlayDim = View.Image(Refs.OverlayDim_Image);
 
@@ -74,6 +82,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
         BindEvent(exitButton, _ => OnExitRequested?.Invoke());
         BindEvent(donateButton, _ => OnDonateRequested?.Invoke());
+        BindEvent(sendEmojiButton, _ => OnSendEmojiRequested?.Invoke());
+        BindEvent(sendChatButton, _ => OnSendChatRequested?.Invoke());
     }
 
     public ChatRail GetChatRail() => chatRail;
@@ -89,6 +99,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
         if (!valid) return;
         if (exitButton) exitButton.interactable = interactable;
         if (donateButton) donateButton.interactable = interactable;
+        if (sendEmojiButton) sendEmojiButton.interactable = interactable;
+        if (sendChatButton) sendChatButton.interactable = interactable;
     }
 
     private bool ValidateRefs()
@@ -103,6 +115,8 @@ public sealed class LiveUIRoot : UIRoot<LiveUIRoot.Refs>
 
         AppendMissing(ref missing, exitButton, Refs.ExitButton_Button);
         AppendMissing(ref missing, donateButton, Refs.DonateButton_Button);
+        AppendMissing(ref missing, sendEmojiButton, Refs.SendEmojiButton_Button);
+        AppendMissing(ref missing, sendChatButton, Refs.SendChatButton_Button);
 
         // OverlayDim은 옵션이면 체크에서 빼도 됨.
         // AppendMissing(ref missing, overlayDim, Refs.OverlayDim_Image);
