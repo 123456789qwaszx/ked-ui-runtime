@@ -4,36 +4,35 @@ using UnityEngine;
 
 public sealed class ChatEngine : MonoBehaviour
 {
-    [Header("Profile")] [SerializeField] private ChatRuleProfileSO profile;
-    [Header("Content")] [SerializeField] private ChatContentDBSO contentDb;
-    [Header("UI")] [SerializeField] private ChatRail rail;
-    [Header("Debug")] [SerializeField] private bool autoStart = true;
+    [SerializeField] private ChatRuleProfileSO profile;
+    [SerializeField] private ChatContentDBSO contentDb;
+    [SerializeField] private ChatRail rail;
+    [SerializeField] private bool autoStart = true;
 
-    private ChatEngineCore _core;
-    private ChatEngineRuntime _rt;
-    private Queue<ChatEvent> _queue;
+    private ChatEngineCore _chatEngineCore;
+    private ChatEngineRuntime _chatEngineRuntime;
+    private Queue<ChatEvent> _chatQueue;
 
     private UnityChatRng _rng;
-    private IChatPayloadSampler _sampler;
-    private IChatRenderResolver _resolver;
+    private IChatPayloadSampler _chatPayloadSampler;
+    private IChatRenderResolver _chatRenderResolver;
 
-    private ChatSignals _signals;
     private bool _running;
 
     private void Awake()
     {
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
 
-        _queue = new Queue<ChatEvent>(256);
+        _chatQueue = new Queue<ChatEvent>(256);
 
         _rng = new UnityChatRng();
-        _sampler = new DbChatPayloadSampler(contentDb, _rng);
-        _resolver = new DbChatRenderResolver(contentDb);
+        _chatPayloadSampler = new DbChatPayloadSampler(contentDb, _rng);
+        _chatRenderResolver = new DbChatRenderResolver(contentDb);
 
-        _core = new ChatEngineCore(kindCount, _sampler, _rng);
-        _rt = new ChatEngineRuntime(kindCount, profile ? profile.noRepeatTextWindowN : 0);
+        _chatEngineCore = new ChatEngineCore(kindCount, _chatPayloadSampler, _rng);
+        _chatEngineRuntime = new ChatEngineRuntime(kindCount, profile ? profile.noRepeatTextWindowN : 0);
 
-        rail.BindSource(_queue, _resolver);
+        rail.BindSource(_chatQueue, _chatRenderResolver);
 
         if (autoStart)
             StartEngine();
@@ -48,10 +47,10 @@ public sealed class ChatEngine : MonoBehaviour
         }
 
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
-        _rt.Reset(kindCount, profile.noRepeatTextWindowN);
+        _chatEngineRuntime.Reset(kindCount, profile.noRepeatTextWindowN);
 
         // 시작 즉시 1개를 원하면 0, 조금 기다리면 NextNormalInterval로
-        _rt.timeUntilNextEmit = 0f;
+        _chatEngineRuntime.timeUntilNextEmit = 0f;
 
         _running = true;
     }
@@ -64,50 +63,53 @@ public sealed class ChatEngine : MonoBehaviour
         if (!profile) return;
 
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
-        _rt.Reset(kindCount, profile.noRepeatTextWindowN);
+        _chatEngineRuntime.Reset(kindCount, profile.noRepeatTextWindowN);
     }
 
     public void PushSignals(ChatSignals signals)
     {
-        if (!profile) return; // holdSeconds 읽기 위해
+        if (!profile)
+            return;
 
         float hold = Mathf.Max(0f, profile.signalHoldSeconds);
-        float until = _rt.now + hold;
+        float until = _chatEngineRuntime.now + hold;
 
         if (signals.Has(ChatSignalFlags.IdolSpoke))
         {
-            _rt.idolSpokeBoost = 1f;
-            _rt.idolSpokeHoldUntil = Mathf.Max(_rt.idolSpokeHoldUntil, until);
+            _chatEngineRuntime.idolSpokeBoost = 1f;
+            _chatEngineRuntime.idolSpokeHoldUntil = Mathf.Max(_chatEngineRuntime.idolSpokeHoldUntil, until);
         }
 
         if (signals.Has(ChatSignalFlags.DonationHappened))
         {
-            _rt.donationBoost = 1f;
-            _rt.donationHoldUntil = Mathf.Max(_rt.donationHoldUntil, until);
+            _chatEngineRuntime.donationBoost = 1f;
+            _chatEngineRuntime.donationHoldUntil = Mathf.Max(_chatEngineRuntime.donationHoldUntil, until);
         }
 
         if (signals.Has(ChatSignalFlags.BigDonationHappened))
         {
-            _rt.bigDonationBoost = 1f;
-            _rt.bigDonationHoldUntil = Mathf.Max(_rt.bigDonationHoldUntil, until);
+            _chatEngineRuntime.bigDonationBoost = 1f;
+            _chatEngineRuntime.bigDonationHoldUntil = Mathf.Max(_chatEngineRuntime.bigDonationHoldUntil, until);
         }
 
         if (signals.Has(ChatSignalFlags.SystemNotice))
         {
-            _rt.systemBoost = 1f;
-            _rt.systemHoldUntil = Mathf.Max(_rt.systemHoldUntil, until);
+            _chatEngineRuntime.systemBoost = 1f;
+            _chatEngineRuntime.systemHoldUntil = Mathf.Max(_chatEngineRuntime.systemHoldUntil, until);
         }
 
         if (signals.Has(ChatSignalFlags.ISpoke))
         {
-            _rt.myMsgBoost = 1f;
-            _rt.myMsgHoldUntil = Mathf.Max(_rt.myMsgHoldUntil, until);
+            _chatEngineRuntime.myMsgBoost = 1f;
+            _chatEngineRuntime.myMsgHoldUntil = Mathf.Max(_chatEngineRuntime.myMsgHoldUntil, until);
         }
     }
 
     private void Update()
     {
-        if (!_running || !profile) return;
-        _core.Tick(profile, _rt, Time.deltaTime, _queue);
+        if (!_running || !profile)
+            return;
+        
+        _chatEngineCore.Tick(profile, _chatEngineRuntime, Time.deltaTime, _chatQueue);
     }
 }

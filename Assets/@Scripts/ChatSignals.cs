@@ -15,7 +15,6 @@ public readonly struct ChatSignals
 {
     public readonly ChatSignalFlags flags;
 
-    // 선택: 최근 후원 금액 같은 “순간 트리거 데이터”
     public readonly int donationAmount;
 
     public ChatSignals(ChatSignalFlags flags, int donationAmount = 0)

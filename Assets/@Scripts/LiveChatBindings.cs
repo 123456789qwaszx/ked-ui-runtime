@@ -29,7 +29,7 @@ public sealed class LiveChatBindings : IDisposable
 
     public void Dispose()
     {
-        _ctx.Dispose();
+        _ctx.Unbind(bound);
         bound = null;
     }
 

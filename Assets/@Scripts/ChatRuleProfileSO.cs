@@ -1,11 +1,26 @@
-// ChatRuleProfileSO.cs
-// 튜닝 가능한 채팅 생성 프로필 (Rate + Mix + Burst + Hygiene)
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "ChatRuleProfile", menuName = "Live/Chat Rule Profile", order = 203)]
 public sealed class ChatRuleProfileSO : ScriptableObject
 {
+    [Serializable]
+    public struct KindWeight
+    {
+        public ChatEventKind kind;
+        
+        [Range(0f, 10f)]
+        public float weight;
+    }
+    
+    [Serializable]
+    public struct KindCooldown
+    {
+        public ChatEventKind kind;
+        public float cooldownSeconds;
+    }
+    
     [Header("A. Rate (속도)")]
     [Tooltip("기본 초당 생성 개수")]
     [Range(0.1f, 10f)]
@@ -25,18 +40,10 @@ public sealed class ChatRuleProfileSO : ScriptableObject
     [Tooltip("각 Kind별 가중치")]
     public KindWeight[] kindWeights;
     
-    [Tooltip("연속성 보정 (같은 Actor/Action 이어질 확률 보정)")]
+    [Tooltip("같은 kind가 연속될 때 가중치 배수. 1=변화없음, <1=반복 억제, >1=도배/연속 강화")]
     [Range(0f, 2f)]
-    public float streakBias = 1.2f;
+    public float streakWeightMultiplier = 1.2f;
 
-    [System.Serializable]
-    public struct KindWeight
-    {
-        public ChatEventKind kind;
-        
-        [Range(0f, 10f)]
-        public float weight;
-    }
 
     [Header("C. Burst (버스트)")]
     [Tooltip("초당 버스트 발생 확률")]
@@ -66,7 +73,7 @@ public sealed class ChatRuleProfileSO : ScriptableObject
     
     [Tooltip("후원 최대 빈도 (초당) - 0이면 제한 없음")]
     [Range(0f, 1f)]
-    public float maxDonateFrequency = 0.2f;
+    public float maxDonateRateHz = 0.2f;
     
     [Header("E. Signal Response (신호 반응)")]
     [Range(0f, 5f)] public float idolSpokeWeightMul = 2.0f;
@@ -80,48 +87,33 @@ public sealed class ChatRuleProfileSO : ScriptableObject
 
     [Tooltip("신호 반응이 감쇠되는 속도(초당)")]
     public float signalDecayPerSec = 1.2f;
-    
-    
 
-    [System.Serializable]
-    public struct KindCooldown
-    {
-        public ChatEventKind kind;
-        public float cooldownSeconds;
-    }
+    // ==== Helpers ====
 
-    // ========== Helper API ==========
-
-    /// <summary>
-    /// Kind 가중치 가져오기 (기본 Mix 또는 Burst Override)
-    /// </summary>
     public float GetKindWeight(ChatEventKind kind, bool isBurst)
     {
-        var weights = isBurst && burstMixOverride != null && burstMixOverride.Length > 0
+        KindWeight[] weights = isBurst && burstMixOverride != null && burstMixOverride.Length > 0
             ? burstMixOverride
             : kindWeights;
 
         if (weights == null)
             return 1f;
 
-        foreach (var kw in weights)
+        foreach (KindWeight kw in weights)
         {
             if (kw.kind == kind)
                 return kw.weight;
         }
 
-        return 1f; // 기본값
+        return 1f;
     }
 
-    /// <summary>
-    /// Kind 쿨다운 가져오기
-    /// </summary>
     public float GetKindCooldown(ChatEventKind kind)
     {
         if (kindCooldowns == null)
             return 0f;
 
-        foreach (var kc in kindCooldowns)
+        foreach (KindCooldown kc in kindCooldowns)
         {
             if (kc.kind == kind)
                 return kc.cooldownSeconds;
@@ -130,18 +122,6 @@ public sealed class ChatRuleProfileSO : ScriptableObject
         return 0f;
     }
 
-    /// <summary>
-    /// Jitter 적용된 Rate 계산
-    /// </summary>
-    public float GetJitteredRate()
-    {
-        float jitter = UnityEngine.Random.Range(-rateJitter, rateJitter);
-        return baseRatePerSec * (1f + jitter);
-    }
-
-    /// <summary>
-    /// Validation (Inspector 경고용)
-    /// </summary>
     private void OnValidate()
     {
         if (minInterval > maxInterval)
