@@ -50,6 +50,42 @@ MonoBehaviour:
     - "\uACE0\uB9C8\uC6CC\uC694! \uC624\uB298 \uC9C4\uC9DC \uD589\uBCF5\uD574\uC694!!"
     - "\uC81C\uAC00 \uC774\uB807\uAC8C \uD589\uBCF5\uD574\uB3C4 \uB418\uB294\uAC78\uAE4C\uC694..."
     - "\uAC10\uC0AC\uD569\uB2C8\uB2E4."
+  - kind: 0
+    flavor: 6
+    texts:
+    - Chant0
+    - Chant01
+    - Chant02
+  - kind: 0
+    flavor: 5
+    texts:
+    - Toxic0
+    - Toxic01
+    - Toxic02
+  - kind: 0
+    flavor: 0
+    texts:
+    - fallback0
+    - fallback01
+    - fallback02
+  - kind: 4
+    flavor: 0
+    texts:
+    - Msgfallback0
+    - Msgfallback01
+    - Msgfallback02
+  - kind: 5
+    flavor: 0
+    texts:
+    - EmoteOnlyfallback0
+    - EmoteOnlyfallback01
+    - EmoteOnlyfallback02
+  - kind: 3
+    flavor: 0
+    texts:
+    - Systemfallback0
+    - Systemfallback01
+    - Systemfallback02
   donationAmounts:
   - amount: 1000
     weight: 5

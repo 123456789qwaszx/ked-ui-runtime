@@ -50,14 +50,27 @@ public sealed class DbChatRenderResolver : IChatRenderResolver
         return _db.viewerNames[idx];
     }
 
+    private const int DebugTextId_SampleFailed = unchecked((int)0xFFFFFFFF);
+
     private string ResolveBody(int textId, in ChatEvent evt)
     {
-        if (textId == 0 || !_db) return string.Empty;
+        if (!_db) return string.Empty;
 
-        // textId를 (kind, flavor, idx)로 다시 풀어내는 최소 구현
+        if (textId == DebugTextId_SampleFailed)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return $"<color=red>[MISSING TEXT: {evt.kind}/{evt.flavor}]</color>";
+#else
+        return "...";
+#endif
+        }
+
+        if (textId == 0) return string.Empty;
+
         int k = (textId >> 24) & 0xFF;
         int f = (textId >> 16) & 0xFF;
-        int i = (textId & 0xFFFF);
+        int i = (textId & 0xFFFF) - 1;
+        if (i < 0) return string.Empty;
 
         var kind = (ChatEventKind)k;
         var flavor = (CrowdFlavor)f;
@@ -67,7 +80,6 @@ public sealed class DbChatRenderResolver : IChatRenderResolver
             if (i >= 0 && i < texts.Length) return texts[i];
         }
 
-        // fallback
         if (_db.TryGetTexts(kind, CrowdFlavor.None, out texts) && texts != null && texts.Length > 0)
         {
             int idx = Mathf.Clamp(i, 0, texts.Length - 1);

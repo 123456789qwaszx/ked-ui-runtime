@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public sealed class DbChatPayloadSampler : IChatPayloadSampler
@@ -123,34 +124,84 @@ public sealed class DbChatPayloadSampler : IChatPayloadSampler
         return _rng.RangeInt(1, _db.emotes.Length + 1);
     }
 
+    private const int DebugTextId_SampleFailed = unchecked((int)0xFFFFFFFF);
+
     private int SampleTextId(ChatEventKind kind, CrowdFlavor flavor, ChatEngineRuntime rt)
     {
-        if (!_db) return 0;
-        if (!_db.TryGetTexts(kind, flavor, out var texts) || texts == null || texts.Length == 0) return 0;
+        if (!_db.TryGetTexts(kind, flavor, out var texts) || texts == null || texts.Length == 0)
+        {// 실패원인 1: ChatContentDBSO.textBuckets에 해당 조합이 없음. 해결방안 (1): ChatContentDBSO 최소한 폴백을 위한(Crowd, None)을 추가하고, 올바른 (kind, flavor)을 추가하십니오.
+         // ## 각 Kind별 1개씩의 None이 필요합니다. 또 런타임 중 추가/변경은 반영되지 않습니다.
+         // 실패원인 2: 물려놓은 DB가 올바른 것인지 확인하고, 버킷 내 빈 Texts가 있는지 점검하십시오.
+         // 실패원인 3: enum mismatch: Flavor Enum을 수정했다면, 오래된 데이터를 수정하십시오.
+            Debug.LogError(
+                $"[ChatSampler] No texts bucket. db={_db.name} kind={kind} flavor={flavor} (and/or None fallback empty)",
+                _db
+            );
+            return DebugTextId_SampleFailed;
+        }
 
-        // textId를 “배열 인덱스”로 잡으면, noRepeat가 깨질 수 있어(버킷별 중복).
-        // 최소 구현으로는 (kind, flavor, index) 해시를 textId로 만든다.
         int safety = 8;
+        int fallbackId = 0;  // noRepeat 실패 시 마지막으로 뽑은 id 저장
+    
         while (safety-- > 0)
         {
             int idx = _rng.RangeInt(0, texts.Length);
+
+            if (string.IsNullOrEmpty(texts[idx]))
+            {
+                int emptyId = MakeTextId(kind, flavor, idx);
+                Debug.LogWarning( // 실패 원인: DB의 texts[idx]가 nuil 혹은 빈 문자열
+                    $"[ChatSampler] Empty text skipped. db={_db.name} kind={kind} flavor={flavor} idx={idx} textId=0x{emptyId:X8}",
+                    _db
+                );
+                continue;
+            }
+
             int id = MakeTextId(kind, flavor, idx);
 
             if (rt.recentTextIds == null || !rt.recentTextIds.Contains(id))
                 return id;
+
+            // noRepeat에 걸렸지만, 최소한 유효한 텍스트는 있음
+            fallbackId = id;
+        
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log( // 실패원인: 랜덤으로 뽑은 텍스트가 최근 사용 기록에 있기에, 중복 금지 규칙에 걸림.
+                // 주의: 정상상황이지만, noRepeatTextWindowN을 낮추거나, 자주 나오는 버킷의 텍스트를 추가하십시오.
+                $"[ChatSampler] noRepeat hit. db={_db.name} kind={kind} flavor={flavor} idx={idx} textId=0x{id:X8}",
+                _db
+            );
+#endif
         }
 
-        return 0;
+        // noRepeat 때문에 실패했지만, 유효한 텍스트는 있음 → fallback 사용
+        if (fallbackId != 0)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.LogWarning( // 실패 원인: while(safety 동안) 계속 noRepeat에 걸렸기에, 그냥 마지막 유효텍스트를 사용.
+                // 해결 방안: noRepeatTextWindowN을 줄이거나, 버킷 텍스트를 늘리십시오.
+                $"[ChatSampler] noRepeat failed, using fallback. db={_db.name} kind={kind} flavor={flavor} len={texts.Length}",
+                _db
+            );
+#endif
+            return fallbackId;  // 중복이지만 그냥 사용
+        }
+
+        Debug.LogError( // 경고: 유효한 텍스트를 하나도 못 찾았거나, 텍스트 배열 자체를 정상적으로 읽지 못했습니다.
+            $"[ChatSampler] SampleTextId FAILED. db={_db.name} kind={kind} flavor={flavor} len={texts.Length}",
+            _db
+        );
+
+        return DebugTextId_SampleFailed;
     }
 
     private int MakeTextId(ChatEventKind kind, CrowdFlavor flavor, int idx)
     {
-        // 간단 안정 해시: 1-based로 만들기
-        // kind(0..), flavor(0..), idx(0..)
+        // 1-based id 생성
         int k = (int)kind & 0xFF;
         int f = (int)flavor & 0xFF;
-        int i = idx & 0xFFFF;
-        return (k << 24) | (f << 16) | i | 1;
+        int i = (idx + 1) & 0xFFFF;  // 1-based로 변환
+        return (k << 24) | (f << 16) | i;
     }
 
     private int SampleDonationAmount()
