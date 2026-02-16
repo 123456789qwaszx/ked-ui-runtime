@@ -20,16 +20,29 @@ MonoBehaviour:
   - kind: 0
     weight: 7
   - kind: 1
-    weight: 1.2
+    weight: 0
   - kind: 2
     weight: 0.4
   - kind: 3
-    weight: 0.2
+    weight: 0
   - kind: 4
     weight: 0
   - kind: 5
-    weight: 0.8
-  streakBias: 1.2
+    weight: 0
+  streakWeightMultiplier: 1.2
+  crowdFlavorWeights:
+  - flavor: 1
+    weight: 7.04
+  - flavor: 2
+    weight: 5.16
+  - flavor: 3
+    weight: 1
+  - flavor: 4
+    weight: 1
+  - flavor: 5
+    weight: 1
+  - flavor: 6
+    weight: 2
   burstChancePerSec: 0.05
   burstLengthRange: {x: 3, y: 8}
   burstIntervalRange: {x: 0.05, y: 0.18}
@@ -51,4 +64,11 @@ MonoBehaviour:
     cooldownSeconds: 0.5
   maxSameKindStreak: 3
   noRepeatTextWindowN: 5
-  maxDonateFrequency: 0.2
+  maxDonateRateHz: 0.2
+  idolSpokeWeightMul: 2
+  donationWeightMul: 2.5
+  bigDonationWeightMul: 3.5
+  systemWeightMul: 2
+  myMsgWeightMul: 2
+  signalHoldSeconds: 2
+  signalDecayPerSec: 1.2

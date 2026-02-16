@@ -11,7 +11,7 @@ public sealed class DbChatPayloadSampler : IChatPayloadSampler
         _rng = rng;
     }
 
-    public bool TrySample(int kindIndex, ChatEngineRuntime rt, out ChatEvent evt)
+    public bool TrySample(ChatRuleProfileSO profile, int kindIndex, ChatEngineRuntime rt, out ChatEvent evt)
     {
         var kind = (ChatEventKind)kindIndex;
 
@@ -29,7 +29,7 @@ public sealed class DbChatPayloadSampler : IChatPayloadSampler
         switch (kind)
         {
             case ChatEventKind.Crowd:
-                flavor = SampleCrowdFlavor(); // 간단히 랜덤 or 별도 분포로
+                flavor = SampleCrowdFlavor(profile); // 간단히 랜덤 or 별도 분포로
                 nameId = SampleNameId();
                 textId = SampleTextId(kind, flavor, rt);
                 break;
@@ -65,11 +65,50 @@ public sealed class DbChatPayloadSampler : IChatPayloadSampler
         return true;
     }
 
-    private CrowdFlavor SampleCrowdFlavor()
+    private CrowdFlavor SampleCrowdFlavor(ChatRuleProfileSO profile)
     {
-        // 최소 구현: 균등. 나중에 Profile/Signals로 flavor 분포를 분리해도 됨.
-        int v = _rng.RangeInt(1, 7); // Cheer..Chant
-        return (CrowdFlavor)v;
+        // 프로파일이 없거나 flavorWeights가 비어있으면 기존처럼 균등
+        if (!profile)
+            return (CrowdFlavor)_rng.RangeInt(1, 7); // Cheer..Chant
+
+        // profile.GetCrowdFlavorWeight가 -1이면 "미사용"이므로 균등 fallback
+        // 가중치 룰렛: Cheer(1) ~ Chant(6)
+        float total = 0f;
+
+        for (int i = 1; i <= 6; i++)
+        {
+            float w = profile.GetCrowdFlavorWeight((CrowdFlavor)i);
+            if (w < 0f)
+            {
+                // crowdFlavorWeights 미사용 → 균등 fallback
+                return (CrowdFlavor)_rng.RangeInt(1, 7);
+            }
+
+            if (w > 0f)
+                total += w;
+        }
+
+        if (total <= 0f)
+        {
+            // 전부 0이면 균등 fallback (또는 None 반환 정책도 가능)
+            return (CrowdFlavor)_rng.RangeInt(1, 7);
+        }
+
+        float roll = _rng.Range(0f, total);
+        float cum = 0f;
+
+        for (int i = 1; i <= 6; i++)
+        {
+            float w = profile.GetCrowdFlavorWeight((CrowdFlavor)i);
+            if (w <= 0f) continue;
+
+            cum += w;
+            if (roll < cum)
+                return (CrowdFlavor)i;
+        }
+
+        // 이론상 도달 X (부동소수 오차 안전망)
+        return (CrowdFlavor)_rng.RangeInt(1, 7);
     }
 
     private int SampleNameId()

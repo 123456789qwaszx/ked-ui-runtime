@@ -15,6 +15,15 @@ public sealed class ChatRuleProfileSO : ScriptableObject
     }
     
     [Serializable]
+    public struct FlavorWeight
+    {
+        public CrowdFlavor flavor;
+
+        [Range(0f, 10f)]
+        public float weight;
+    }
+    
+    [Serializable]
     public struct KindCooldown
     {
         public ChatEventKind kind;
@@ -43,6 +52,10 @@ public sealed class ChatRuleProfileSO : ScriptableObject
     [Tooltip("같은 kind가 연속될 때 가중치 배수. 1=변화없음, <1=반복 억제, >1=도배/연속 강화")]
     [Range(0f, 2f)]
     public float streakWeightMultiplier = 1.2f;
+    
+    [Header("B2. Crowd Flavor Mix (Crowd 내부 비율)")]
+    [Tooltip("Crowd일 때 Flavor 가중치. 비어있으면 Cheer..Chant 균등.")]
+    public FlavorWeight[] crowdFlavorWeights;
 
 
     [Header("C. Burst (버스트)")]
@@ -107,6 +120,20 @@ public sealed class ChatRuleProfileSO : ScriptableObject
 
         return 1f;
     }
+    
+    public float GetCrowdFlavorWeight(CrowdFlavor flavor)
+    {
+        if (crowdFlavorWeights == null || crowdFlavorWeights.Length == 0)
+            return -1f; // "미사용" 표시(샘플러에서 균등 fallback)
+
+        foreach (FlavorWeight fw in crowdFlavorWeights)
+        {
+            if (fw.flavor == flavor)
+                return fw.weight;
+        }
+
+        return 0f; // 명시하지 않은 flavor는 0으로 취급(뽑히지 않음)
+    }
 
     public float GetKindCooldown(ChatEventKind kind)
     {
@@ -132,6 +159,23 @@ public sealed class ChatRuleProfileSO : ScriptableObject
         if (kindWeights == null || kindWeights.Length == 0)
         {
             Debug.LogWarning($"[ChatRuleProfileSO] {name}: kindWeights is empty", this);
+        }
+        
+        if (crowdFlavorWeights != null && crowdFlavorWeights.Length > 0)
+        {
+            bool[] seen = new bool[7];
+            for (int i = 0; i < crowdFlavorWeights.Length; i++)
+            {
+                int f = (int)crowdFlavorWeights[i].flavor;
+                if (f < 0 || f > 6) continue;
+
+                if (seen[f])
+                {
+                    Debug.LogWarning($"[ChatRuleProfileSO] {name}: crowdFlavorWeights has duplicate flavor: {crowdFlavorWeights[i].flavor}", this);
+                    break;
+                }
+                seen[f] = true;
+            }
         }
     }
 }

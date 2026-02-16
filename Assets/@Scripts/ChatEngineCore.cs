@@ -5,7 +5,7 @@ public interface IChatPayloadSampler
 {
     // kindIndex를 받아 payload(텍스트/금액/이모트 등)를 샘플링.
     // noRepeat 검사용 textId까지 포함된 ChatEvent를 반환.
-    bool TrySample(int kindIndex, ChatEngineRuntime rt, out ChatEvent evt);
+    bool TrySample(ChatRuleProfileSO profile, int kindIndex, ChatEngineRuntime rt, out ChatEvent evt);
 }
 
 // 채팅 생성 엔진.
@@ -63,7 +63,7 @@ public sealed class ChatEngineCore
             if (kindIndex >= 0)
             {
                 // 2) payload 샘플(DB) → ChatEvent 생성
-                if (_sampler != null && _sampler.TrySample(kindIndex, rt, out ChatEvent evt))
+                if (_sampler != null && _sampler.TrySample(profile, kindIndex, rt, out ChatEvent evt))
                 {
                     // 3) 런타임 기록(쿨다운/스트릭/중복방지 등)
                     RecordAfterEmit(profile, rt, kindIndex, evt);
