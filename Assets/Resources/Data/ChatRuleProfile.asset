@@ -63,7 +63,7 @@ MonoBehaviour:
   - kind: 5
     cooldownSeconds: 0.5
   maxSameKindStreak: 3
-  noRepeatTextWindowN: 5
+  noRepeatTextWindowN: 0
   maxDonateRateHz: 0.2
   idolSpokeWeightMul: 2
   donationWeightMul: 2.5
