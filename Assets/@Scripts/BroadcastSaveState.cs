@@ -2,27 +2,28 @@ using System;
 using System.Collections.Generic;
 
 [Flags]
-public enum UnlockFlags : ulong
+public enum UnlockFlags : uint
 {
     None = 0,
-    // 예: 투표, 리플, 기록탭, DM탭, 리서치 등
-    Vote = 1UL << 0,
-    Replay = 1UL << 1,
-    Records = 1UL << 2,
-    DmTab = 1UL << 3,
-    Research = 1UL << 4,
+    Vote = 1u << 0,
+    Replay = 1u << 1,
+    Records = 1u << 2,
+    DmTab = 1u << 3,
+    Research = 1u << 4,
 }
 
+
 [Flags]
-public enum LockFlags : ulong
+public enum LockFlags : uint
 {
     None = 0,
-    VoteLocked = 1UL << 0,
-    DonationPresetLocked = 1UL << 1,
-    OneChoiceSealed = 1UL << 2,
-    DmSuppressed = 1UL << 3,
-    NightEventDarker = 1UL << 4, // “불길 노드 주입” 계열
+    VoteLocked = 1u << 0,
+    DonationPresetLocked = 1u << 1,
+    OneChoiceSealed = 1u << 2,
+    DmSuppressed = 1u << 3,
+    NightEventDarker = 1u << 4,
 }
+
 
 [Serializable]
 public sealed class BroadcastSaveState
