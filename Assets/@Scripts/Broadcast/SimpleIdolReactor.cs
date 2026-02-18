@@ -1,4 +1,4 @@
-public sealed class SimpleIdolReactor : IIdolReactor
+public sealed class SimpleIdolReactor
 {
     public IdolReaction React(ChatTag tag, string optionId)
     {

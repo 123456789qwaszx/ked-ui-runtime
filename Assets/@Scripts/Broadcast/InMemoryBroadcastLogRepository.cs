@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public sealed class InMemoryBroadcastLogRepository : IBroadcastLogRepository
+public sealed class InMemoryBroadcastLogRepository
 {
     private readonly List<BroadcastEventLog> _logs = new List<BroadcastEventLog>(capacity: 8);
 

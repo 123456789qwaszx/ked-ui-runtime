@@ -10,11 +10,11 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
 
     private LiveChatBindings _liveChatBindings;
 
-    private IBroadcastLogRepository _repo;
+    private InMemoryBroadcastLogRepository _repo;
     private BroadcastEventLogRecorder _recorder;
-    private IIdolReactor _idol;
+    private SimpleIdolReactor _idol;
     
-    private IBroadcastStateRepository _stateRepo;
+    private InMemoryBroadcastStateRepository _stateRepo;
     private BroadcastEndPipeline _endPipeline;
 
     private void Awake()

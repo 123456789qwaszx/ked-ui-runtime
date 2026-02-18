@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public sealed class InMemoryBroadcastStateRepository : IBroadcastStateRepository
+public sealed class InMemoryBroadcastStateRepository
 {
     private readonly Dictionary<string, BroadcastSaveState> _map = new Dictionary<string, BroadcastSaveState>();
 
