@@ -1,6 +1,21 @@
 using System;
 using UnityEngine;
 
+[Flags]
+public enum BroadcastFlags : uint
+{
+    None = 0,
+    OperatorWarning = 1u << 0,
+    RestrictionTriggered = 1u << 1,  // 채팅/투표 제한 등
+    VoteSplit = 1u << 2,
+    ClipSeeded = 1u << 3,
+    BigDonationOccurred = 1u << 4,
+    MyMsgPinned = 1u << 5,
+    IdolDirectRequest = 1u << 6,     // “약속해줘” 직접 요청이 있었음
+    PromiseAccepted = 1u << 7,
+    PromiseDodged = 1u << 8,
+}
+
 public enum ChatTag : byte
 {
     Instinct = 0, // 직감
@@ -56,6 +71,23 @@ public sealed class BroadcastEventLog
 
     // (선택) 방송 종료 시점에 계산된 6지수 스냅샷을 저장하고 싶다면
     public IndicesSnapshot indicesAtEnd;
+    
+    public BroadcastFlags flags;
+
+    public int operatorWarningCount;
+    public int restrictionTriggeredCount;
+
+    public int voteSplitCount;     // 단순 bool이면 flags만으로 충분. 필요시 count.
+    public int clipSeededCount;
+
+    public int myMsgPinnedCount;
+    public int idolDirectRequestCount;
+
+    public int promiseAcceptedCount;
+    public int promiseDodgedCount;
+
+    // (선택) “이번 방송의 최종 태도”를 하나로 요약하고 싶다면
+    public ChatTag dominantTag; // Instinct/Analysis/Chaos 중 최다
 }
 
 /// <summary>
