@@ -144,21 +144,25 @@ public sealed class ChatEngine : MonoBehaviour
         if (log == null)
             return;
 
-        // (1) 로그 저장 (Store)
         _deps.store?.AppendLog(log);
 
-        // (2) 종료 파이프라인 + State 저장 (Store)
         if (_deps.store != null && _deps.endPipeline != null)
         {
             BroadcastSaveState state = _deps.store.LoadOrCreateState(log.runId);
-
             BroadcastEndResult result = _deps.endPipeline.ProcessEnd(state, log);
-
             _deps.store.SaveState(state);
 
+            // (A) 먼저 패널을 확보하고
+            var panel = UIManager.Instance.PushPanelPatched<BroadcastEndPanel>();
+            // (B) 그 패널에 데이터를 꽂아라
+            panel.SetData(result);
+            panel.SetVisible(true); // Push가 이미 보여주면 생략
+
+            // (원하면) 콜백은 "UI가 아닌 다른 리스너"에만
             _deps.onEventEnded?.Invoke(result);
         }
     }
+
 
     public void RecordDonation(int amount) => _deps.recorder.RecordDonation(amount);
     public void RecordEmoji(int emojiId) => _deps.recorder.RecordEmoji(emojiId);

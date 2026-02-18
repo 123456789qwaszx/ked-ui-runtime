@@ -6,22 +6,17 @@ using static UIRefValidation;
 
 public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
 {
-    // UI에서 “정산 확인 → 밤 사건으로 진행”을 누르면 eventKey를 넘겨주는 식
     public event Action OnCloseRequested;
     public event Action<string> OnContinueRequested; // nightEventKey
 
     #region Refs
-
     public enum Refs
     {
-        // ---- Root ----
         PanelRoot_Root,
 
-        // ---- Header ----
         TitleText_Text,
         CloseButton_Button,
 
-        // ---- Recap ----
         RecapRoot_Root,
         SummaryText_Text,
 
@@ -40,12 +35,10 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         ChangeRow2_Delta_Text,
         ChangeRow2_Cause_Text,
 
-        // ---- Evaluation ----
         EvaluationRoot_Root,
         GradeText_Text,
         NoteText_Text,
 
-        // ---- Settlement ----
         SettlementRoot_Root,
         DeltaZoneText_Text,
         DeltaRiskText_Text,
@@ -53,18 +46,15 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         TokensText_Text,
         LocksText_Text,
 
-        // ---- Night Event ----
         NightRoot_Root,
         NightTitleText_Text,
         NightTeaserText_Text,
 
-        // ---- Next Contract ----
         ContractRoot_Root,
         ContractTitleText_Text,
         ContractGoalsText_Text,
         ContractHintText_Text,
 
-        // ---- Footer ----
         ContinueButton_Button,
     }
 
@@ -98,13 +88,15 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
     private TMP_Text contractHintText;
 
     private Button continueButton;
-
     #endregion
 
     private bool valid;
 
-    // 마지막으로 세팅한 결과(버튼 콜백에서 nightKey를 넘길 때 사용)
-    private BroadcastEndResult _current;
+    // ---- Data ----
+    private bool _initialized;
+    private BroadcastEndResult _current;   // 현재 표시 중인 값
+    private BroadcastEndResult _pending;   // Initialize 전에 들어온 값
+    private string _nightEventKey = "none";
 
     protected override void Initialize()
     {
@@ -167,49 +159,83 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         valid = true;
 #endif
 
-        // 기본은 숨김(원하면 여기서 true로)
-        SetVisible(false);
+        BindEvent(closeButton, _ => RaiseClose());
+        BindEvent(continueButton, _ => RaiseContinue());
 
-        BindEvent(closeButton, _ => OnCloseRequested?.Invoke());
-        BindEvent(continueButton, _ =>
+        _initialized = true;
+
+        // ✅ Initialize 전에 SetData가 들어왔으면 이제 적용
+        if (_pending != null)
         {
-            // night event key로 다음 진행을 위임
-            string nightKey = _current != null ? _current.nightEvent.eventKey : "none";
-            OnContinueRequested?.Invoke(nightKey);
-        });
+            Apply(_pending);
+            _pending = null;
+        }
+    }
+
+    /// <summary>
+    /// 외부에서 결과를 주입. (Initialize 전/후 모두 안전)
+    /// </summary>
+    public void SetData(BroadcastEndResult result)
+    {
+        // UI가 아직 준비 전이면 보관했다가 Initialize 후 적용
+        if (!_initialized || !valid)
+        {
+            _pending = result;
+            return;
+        }
+
+        Apply(result);
     }
 
     public void SetVisible(bool visible)
     {
-        if (!valid) return;
-        if (panelRoot) panelRoot.gameObject.SetActive(visible);
+        gameObject.SetActive(visible);
     }
 
-    public void Show(BroadcastEndResult result)
+    private void RaiseClose()
+    {
+        OnCloseRequested?.Invoke();
+    }
+
+    private void RaiseContinue()
+    {
+        // night key로 다음 진행을 위임
+        OnContinueRequested?.Invoke(_nightEventKey ?? "none");
+    }
+
+    /// <summary>
+    /// ✅ 실제 UI 반영(Apply/Render)
+    /// </summary>
+    private void Apply(BroadcastEndResult result)
     {
         if (!valid) return;
 
         _current = result;
 
-        // 방어
+        // 방어: null이면 숨김
         if (result == null)
         {
+            _nightEventKey = "none";
             SetVisible(false);
             return;
         }
 
+        // 표시
         SetVisible(true);
+
+        // night key 캐시 (Continue 버튼에서 사용)
+        _nightEventKey = !string.IsNullOrEmpty(result.nightEvent.eventKey)
+            ? result.nightEvent.eventKey
+            : "none";
 
         // ----- Header -----
         SetText(titleText, "방송 정산");
 
         // ----- Recap -----
         bool hasRecap = result.recap.changes != null && result.recap.changes.Length > 0;
-        SetActive(recapRoot, hasRecap);
-
+        SetActive(recapRoot, true); // 요약은 항상 보여주는 게 UX상 자연스러움
         SetText(summaryText, result.recap.summaryText);
 
-        // changes: 최대 3줄 고정(너 빌더가 3줄로 생성하니까)
         for (int i = 0; i < changeRows.Length; i++)
         {
             if (result.recap.changes == null || i >= result.recap.changes.Length)
@@ -224,10 +250,11 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         }
 
         // ----- Evaluation -----
-        bool hasEval = !string.IsNullOrEmpty(result.evaluation.noteText) || result.evaluation.grade != EvalGrade.Success;
         SetActive(evaluationRoot, true);
 
         SetText(gradeText, $"Grade: {result.evaluation.grade}");
+
+        // noteText는 null일 수 있으니 방어
         SetText(noteText, result.evaluation.noteText);
 
         // ----- Settlement -----
@@ -241,7 +268,10 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         SetText(locksText, BuildLocksText(result.settlementPayload.locksAdded, result.settlementPayload.locksRemoved));
 
         // ----- Night -----
-        bool hasNight = result.nightEvent.kind != NightEventKind.None && !string.IsNullOrEmpty(result.nightEvent.eventKey);
+        bool hasNight =
+            result.nightEvent.kind != NightEventKind.None &&
+            !string.IsNullOrEmpty(result.nightEvent.eventKey);
+
         SetActive(nightRoot, hasNight);
 
         if (hasNight)
@@ -252,6 +282,7 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
 
         // ----- Contract -----
         bool hasContract = !string.IsNullOrEmpty(result.nextContract.contractId);
+
         SetActive(contractRoot, hasContract);
 
         if (hasContract)
@@ -260,6 +291,11 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
             SetText(contractGoalsText, BuildGoalsText(result.nextContract.goalsText));
             SetText(contractHintText, result.nextContract.hintText);
         }
+
+        // ----- Footer -----
+        // continue 버튼은 night가 없으면 비활성/숨김 처리해도 됨 (선택)
+        if (continueButton)
+            continueButton.interactable = hasNight;
     }
 
     // ---------- Helpers ----------
@@ -291,8 +327,6 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
     private static string BuildGoalsText(string[] goals)
     {
         if (goals == null || goals.Length <= 0) return string.Empty;
-
-        // P0: 1~2개만이지만 안전하게 처리
         if (goals.Length == 1) return $"• {goals[0]}";
         return $"• {goals[0]}\n• {goals[1]}";
     }
@@ -302,11 +336,10 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         if (tokenDeltas == null || tokenDeltas.Length <= 0)
             return "Tokens: (없음)";
 
-        // effectText 1줄 요약을 그대로 쓰는게 네 설계 의도에 맞음
-        // (필요하면 kind/tokenId도 붙이면 됨)
         var lines = new System.Text.StringBuilder(128);
         lines.Append("Tokens:\n");
-        int count = Mathf.Min(tokenDeltas.Length, 4); // P0: 너무 길어지면 컷
+
+        int count = Mathf.Min(tokenDeltas.Length, 4);
         for (int i = 0; i < count; i++)
         {
             string text = tokenDeltas[i].effectText;
@@ -315,12 +348,12 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
 
             lines.Append("• ").Append(text).Append('\n');
         }
+
         return lines.ToString().TrimEnd();
     }
 
     private static string BuildLocksText(LockFlags added, LockFlags removed)
     {
-        // removed는 P0에선 None이겠지만 준비는 해둠
         if (added == LockFlags.None && removed == LockFlags.None)
             return "Locks: (변화 없음)";
 
@@ -345,11 +378,6 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         AppendMissing(ref missing, recapRoot, Refs.RecapRoot_Root);
         AppendMissing(ref missing, summaryText, Refs.SummaryText_Text);
 
-        // for (int i = 0; i < changeRows.Length; i++)
-        // {
-        //     changeRows[i].AppendMissing(ref missing, i);
-        // }
-
         AppendMissing(ref missing, evaluationRoot, Refs.EvaluationRoot_Root);
         AppendMissing(ref missing, gradeText, Refs.GradeText_Text);
         AppendMissing(ref missing, noteText, Refs.NoteText_Text);
@@ -361,7 +389,6 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
         AppendMissing(ref missing, tokensText, Refs.TokensText_Text);
         AppendMissing(ref missing, locksText, Refs.LocksText_Text);
 
-        // night/contract는 “없어도” 게임이 멈추진 않지만, UI 자체는 있길 권장
         AppendMissing(ref missing, nightRoot, Refs.NightRoot_Root);
         AppendMissing(ref missing, nightTitleText, Refs.NightTitleText_Text);
         AppendMissing(ref missing, nightTeaserText, Refs.NightTeaserText_Text);
