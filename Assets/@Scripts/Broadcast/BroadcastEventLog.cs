@@ -72,6 +72,7 @@ public sealed class BroadcastEventLog
     // (선택) 방송 종료 시점에 계산된 6지수 스냅샷을 저장하고 싶다면
     public IndicesSnapshot indicesAtEnd;
     
+    
     public BroadcastFlags flags;
 
     public int operatorWarningCount;

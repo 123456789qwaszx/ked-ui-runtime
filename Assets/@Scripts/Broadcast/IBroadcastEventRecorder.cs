@@ -22,6 +22,16 @@ public interface IBroadcastEventRecorder
 
     // R-08
     void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted);
+    
+    // (P0 핵심 사건)
+    void RecordOperatorWarning();
+    void RecordRestrictionTriggered();
+    void RecordVoteSplit();
+    void RecordClipSeeded();
+    void RecordMyMsgPinned();
+    void RecordIdolDirectRequest();
+    void RecordPromiseAccepted();
+    void RecordPromiseDodged();
 
     // 결과물
     BroadcastEventLog BuildLog();

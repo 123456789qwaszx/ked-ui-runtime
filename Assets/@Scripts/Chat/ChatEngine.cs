@@ -130,9 +130,22 @@ public sealed class ChatEngine : MonoBehaviour
     {
         if (_session == null)
             return;
-        
+
         BroadcastEventLog log = _session.End(nowSec);
+
+        // (1) 로그 저장
         _deps.repository.Add(log);
+
+        // (2) 종료 파이프라인
+        if (_deps.stateRepository != null && _deps.endPipeline != null)
+        {
+            BroadcastSaveState state = _deps.stateRepository.LoadOrCreate(log.runId);
+            BroadcastEndResult result = _deps.endPipeline.ProcessEnd(state, log);
+            _deps.stateRepository.Save(state);
+
+            _deps.onEventEnded?.Invoke(result);
+        }
+
         _session = null;
     }
 

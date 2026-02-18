@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public sealed class LiveStreamBootstrap : MonoBehaviour
@@ -12,6 +13,9 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     private IBroadcastLogRepository _repo;
     private IBroadcastEventRecorder _recorder;
     private IIdolReactor _idol;
+    
+    private IBroadcastStateRepository _stateRepo;
+    private BroadcastEndPipeline _endPipeline;
 
     private void Awake()
     {
@@ -19,7 +23,23 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
         _recorder = new BroadcastEventRecorder();
         _idol = new SimpleIdolReactor();
 
-        ChatEngineDeps deps = new (_repo, _recorder, _idol);
+        // 영속 상태 저장소(P0: 메모리)
+        _stateRepo = new InMemoryBroadcastStateRepository();
+
+        // 종료 파이프라인 구성(P0 기본값)
+        _endPipeline = BuildEndPipelineP0();
+
+        // 결과 콜백(P0: 콘솔 출력 or UI 전달)
+        Action<BroadcastEndResult> onEnded = DumpEndResultToConsole;
+        
+        ChatEngineDeps deps = new(
+            repository: _repo,
+            recorder: _recorder,
+            idolReactor: _idol,
+            stateRepository: _stateRepo,
+            endPipeline: _endPipeline,
+            onEventEnded: onEnded
+        );
 
         chatEngine.Initialize(deps);
 
@@ -33,5 +53,34 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     {
         _liveChatBindings?.Dispose();
         _liveChatBindings = null;
+    }
+    
+    private static BroadcastEndPipeline BuildEndPipelineP0()
+    {
+        var delta = new DeltaRuleset();
+        var token = new TokenRuleset();
+        var eval = new EvaluationRuleset();
+        var night = new DefaultNightEventCatalog();
+        var contract = new ContractBuilder();
+
+        return new BroadcastEndPipeline(delta, token, eval, night, contract);
+    }
+
+    private static void DumpEndResultToConsole(BroadcastEndResult result)
+    {
+        Debug.Log($"[BroadcastEnd] {result.recap.summaryText}");
+
+        if (result.recap.changes != null)
+        {
+            for (int i = 0; i < result.recap.changes.Length; i++)
+            {
+                var c = result.recap.changes[i];
+                Debug.Log($"- {c.label} {c.delta:+#;-#;0} {c.causeText}");
+            }
+        }
+
+        Debug.Log($"[Eval] {result.evaluation.grade} note={result.evaluation.noteText}");
+        Debug.Log($"[Night] {result.nightEvent.kind} key={result.nightEvent.eventKey} teaser={result.nightEvent.teaserText}");
+        Debug.Log($"[Next] {result.nextContract.titleText}");
     }
 }

@@ -33,7 +33,20 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
             startedAtSec = startedAtSec,
             endedAtSec = double.NaN,
             phases = null,
-            indicesAtEnd = default
+            indicesAtEnd = default,
+            
+            flags = BroadcastFlags.None,
+
+            operatorWarningCount = 0,
+            restrictionTriggeredCount = 0,
+            voteSplitCount = 0,
+            clipSeededCount = 0,
+            myMsgPinnedCount = 0,
+            idolDirectRequestCount = 0,
+            promiseAcceptedCount = 0,
+            promiseDodgedCount = 0,
+
+            dominantTag = ChatTag.Instinct, // 기본값
         };
 
         _phases.Clear();
@@ -58,6 +71,8 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
 
         _log.endedAtSec = endedAtSec;
         _log.phases = _phases.ToArray();
+        
+        _log.dominantTag = ComputeDominantTag(_log.instinctCountTotal, _log.analysisCountTotal, _log.chaosCountTotal);
 
         _eventActive = false;
     }
@@ -135,6 +150,10 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
         // Event totals
         _log.donationCountTotal += 1;
         _log.donationSumTotal += amount;
+        
+        // big donation 임계치
+        if (amount >= 10000)
+            _log.flags |= BroadcastFlags.BigDonationOccurred;
     }
 
     public void RecordEmoji(int emojiId)
@@ -271,7 +290,19 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
             idolNegativeReactTotal = src.idolNegativeReactTotal,
             idolNeutralReactTotal = src.idolNeutralReactTotal,
 
-            phases = src.phases, // 주의: snapshot에서는 바로 덮어씌움
+            
+            flags = src.flags,
+            operatorWarningCount = src.operatorWarningCount,
+            restrictionTriggeredCount = src.restrictionTriggeredCount,
+            voteSplitCount = src.voteSplitCount,
+            clipSeededCount = src.clipSeededCount,
+            myMsgPinnedCount = src.myMsgPinnedCount,
+            idolDirectRequestCount = src.idolDirectRequestCount,
+            promiseAcceptedCount = src.promiseAcceptedCount,
+            promiseDodgedCount = src.promiseDodgedCount,
+            dominantTag = src.dominantTag,
+
+            phases = src.phases,
             indicesAtEnd = src.indicesAtEnd
         };
     }
@@ -297,5 +328,70 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
         _phaseActive = false;
         _currentPhaseIndex = -1;
         _currentPhase = default;
+    }
+    
+    public void RecordOperatorWarning()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.OperatorWarning;
+        _log.operatorWarningCount += 1;
+    }
+
+    public void RecordRestrictionTriggered()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.RestrictionTriggered;
+        _log.restrictionTriggeredCount += 1;
+    }
+
+    public void RecordVoteSplit()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.VoteSplit;
+        _log.voteSplitCount += 1;
+    }
+
+    public void RecordClipSeeded()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.ClipSeeded;
+        _log.clipSeededCount += 1;
+    }
+
+    public void RecordMyMsgPinned()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.MyMsgPinned;
+        _log.myMsgPinnedCount += 1;
+    }
+
+    public void RecordIdolDirectRequest()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.IdolDirectRequest;
+        _log.idolDirectRequestCount += 1;
+    }
+
+    public void RecordPromiseAccepted()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.PromiseAccepted;
+        _log.promiseAcceptedCount += 1;
+    }
+
+    public void RecordPromiseDodged()
+    {
+        EnsureEventActive();
+        _log.flags |= BroadcastFlags.PromiseDodged;
+        _log.promiseDodgedCount += 1;
+    }
+    
+    private static ChatTag ComputeDominantTag(int instinct, int analysis, int chaos)
+    {
+        // 동점 규칙(P0): Instinct > Analysis > Chaos 우선순위로 안정적으로 고정
+        // (원하면 나중에 Reaction 가중치 등으로 바꿀 수 있음)
+        if (instinct >= analysis && instinct >= chaos) return ChatTag.Instinct;
+        if (analysis >= chaos) return ChatTag.Analysis;
+        return ChatTag.Chaos;
     }
 }
