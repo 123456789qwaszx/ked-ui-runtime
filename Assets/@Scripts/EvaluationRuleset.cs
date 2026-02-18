@@ -1,3 +1,33 @@
+
+public enum EvalGrade : byte
+{
+    Success = 0,
+    AtRisk = 1,
+    Breach = 2,
+    Critical = 3,
+}
+public readonly struct EvaluationResult
+{
+    public readonly bool contractMet;
+    public readonly bool riskThresholdHit;
+    public readonly int breachDelta;
+    public readonly int graceDelta;
+    public readonly EvalGrade grade;
+    public readonly LockFlags locksAdded;
+    public readonly string noteText;
+
+    public EvaluationResult(bool contractMet, bool riskHit, int breachDelta, int graceDelta, EvalGrade grade, LockFlags locksAdded, string noteText)
+    {
+        this.contractMet = contractMet;
+        this.riskThresholdHit = riskHit;
+        this.breachDelta = breachDelta;
+        this.graceDelta = graceDelta;
+        this.grade = grade;
+        this.locksAdded = locksAdded;
+        this.noteText = noteText;
+    }
+}
+
 public sealed class EvaluationRuleset
 {
     public int riskSoftThreshold = 60;
@@ -9,7 +39,7 @@ public sealed class EvaluationRuleset
 
     public int contractZoneTargetDelta = 10; // 기본: 방송당 +10 목표
 
-    public EvaluationResult Evaluate(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
+    public EvaluationResult EvaluateAndApply(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
     {
         // 1) 계약 달성 여부(예: ZoneDelta가 목표 이상이면 달성)
         bool contractMet = deltas.zone >= contractZoneTargetDelta;
@@ -92,27 +122,5 @@ public sealed class EvaluationRuleset
             case EvalGrade.Critical:return "이제 숨길 수 없어. 다음 방송은 규칙이 바뀌어.";
             default: return string.Empty;
         }
-    }
-}
-
-public readonly struct EvaluationResult
-{
-    public readonly bool contractMet;
-    public readonly bool riskThresholdHit;
-    public readonly int breachDelta;
-    public readonly int graceDelta;
-    public readonly EvalGrade grade;
-    public readonly LockFlags locksAdded;
-    public readonly string noteText;
-
-    public EvaluationResult(bool contractMet, bool riskHit, int breachDelta, int graceDelta, EvalGrade grade, LockFlags locksAdded, string noteText)
-    {
-        this.contractMet = contractMet;
-        this.riskThresholdHit = riskHit;
-        this.breachDelta = breachDelta;
-        this.graceDelta = graceDelta;
-        this.grade = grade;
-        this.locksAdded = locksAdded;
-        this.noteText = noteText;
     }
 }

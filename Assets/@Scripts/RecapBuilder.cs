@@ -1,4 +1,20 @@
+using System;
 using UnityEngine;
+
+[Serializable]
+public struct RecapLine
+{
+    public string summaryText;     // 요약 1줄(밝은데 불길)
+    public RecapChangeLine[] changes; // 고정 3줄 권장
+}
+
+[Serializable]
+public struct RecapChangeLine
+{
+    public string label;           // "Zone", "Risk", "Promise" 등
+    public int delta;              // +12, -10 등
+    public string causeText;       // (원인: 고액 후원/운영 경고/약속 수락)
+}
 
 public static class RecapBuilder
 {

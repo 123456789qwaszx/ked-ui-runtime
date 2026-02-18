@@ -41,41 +41,41 @@ public sealed class BroadcastEndPipeline
         TokenDelta[] tokenDeltas = _tokenRules.GrantTokens(state, log, deltas);
 
         // 4) 평가(판정 + SoftFail 잠금)
-        EvaluationResult eval = _evalRules.Evaluate(state, log, deltas);
+        EvaluationResult evaluationResult = _evalRules.EvaluateAndApply(state, log, deltas);
 
         // 5) 밤 사건 선택(1개)
-        NightEventPayload night = NightEventSelector.SelectOne(_nightCatalog, state, log, deltas, eval);
+        NightEventPayload night = NightEventSelector.SelectOne(_nightCatalog, state, log, deltas, evaluationResult);
 
         // 6) 다음 계약
-        NextContractPayload contract = _contractBuilder.BuildNext(state, eval);
+        NextContractPayload contract = _contractBuilder.BuildNext(state, evaluationResult);
 
         // 7) Settlement payload
-        var settlement = new SettlementPayload
+        var settlementPayload = new SettlementPayload
         {
             zoneDelta = deltas.zone,
             riskDelta = deltas.risk,
             promiseDelta = deltas.promise,
             tokenDeltas = tokenDeltas,
-            lockAdded = eval.locksAdded,
-            lockRemoved = LockFlags.None
+            locksAdded = evaluationResult.locksAdded,
+            locksRemoved = LockFlags.None
         };
 
         // 8) Recap
-        RecapLine recap = RecapBuilder.Build(log, deltas, eval, tokenDeltas, eval.locksAdded);
+        RecapLine recap = RecapBuilder.Build(log, deltas, evaluationResult, tokenDeltas, evaluationResult.locksAdded);
 
         // 9) 최종 출력
         return new BroadcastEndResult
         {
             recap = recap,
-            settlement = settlement,
+            settlementPayload = settlementPayload,
             evaluation = new EvaluationPayload
             {
-                grade = eval.grade,
-                contractMet = eval.contractMet,
-                riskThresholdHit = eval.riskThresholdHit,
-                breachCountDelta = eval.breachDelta,
-                graceDelta = eval.graceDelta,
-                noteText = eval.noteText
+                grade = evaluationResult.grade,
+                contractMet = evaluationResult.contractMet,
+                riskThresholdHit = evaluationResult.riskThresholdHit,
+                breachCountDelta = evaluationResult.breachDelta,
+                graceDelta = evaluationResult.graceDelta,
+                noteText = evaluationResult.noteText
             },
             nightEvent = night,
             nextContract = contract

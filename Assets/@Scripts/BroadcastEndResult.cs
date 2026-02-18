@@ -1,19 +1,5 @@
 using System;
-
-[Serializable]
-public struct RecapLine
-{
-    public string summaryText;     // 요약 1줄(밝은데 불길)
-    public RecapChangeLine[] changes; // 고정 3줄 권장
-}
-
-[Serializable]
-public struct RecapChangeLine
-{
-    public string label;           // "Zone", "Risk", "Promise" 등
-    public int delta;              // +12, -10 등
-    public string causeText;       // (원인: 고액 후원/운영 경고/약속 수락)
-}
+using UnityEngine.Serialization;
 
 [Serializable]
 public struct SettlementPayload
@@ -23,8 +9,8 @@ public struct SettlementPayload
     public int promiseDelta;
 
     public TokenDelta[] tokenDeltas;  // 생성/강화/만료
-    public LockFlags lockAdded;
-    public LockFlags lockRemoved;     // 필요하면
+    public LockFlags locksAdded;
+    public LockFlags locksRemoved;
 }
 
 [Serializable]
@@ -36,6 +22,15 @@ public struct EvaluationPayload
     public int breachCountDelta;  // +1 등
     public int graceDelta;        // -1 등
     public string noteText;       // “다음 방송이 더 불길해졌어” 1줄
+}
+
+public enum NightEventKind : byte
+{
+    None = 0,
+    Reward = 1,
+    Pressure = 2,
+    Scandal = 3,
+    Operator = 4,
 }
 
 [Serializable]
@@ -60,7 +55,7 @@ public struct NextContractPayload
 public sealed class BroadcastEndResult
 {
     public RecapLine recap;
-    public SettlementPayload settlement;
+    public SettlementPayload settlementPayload;
     public EvaluationPayload evaluation;
     public NightEventPayload nightEvent;
     public NextContractPayload nextContract;

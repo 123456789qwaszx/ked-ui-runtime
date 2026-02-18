@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 [Flags]
 public enum UnlockFlags : ulong
@@ -23,23 +22,6 @@ public enum LockFlags : ulong
     OneChoiceSealed = 1UL << 2,
     DmSuppressed = 1UL << 3,
     NightEventDarker = 1UL << 4, // “불길 노드 주입” 계열
-}
-
-public enum EvalGrade : byte
-{
-    Success = 0,
-    AtRisk = 1,
-    Breach = 2,
-    Critical = 3,
-}
-
-public enum NightEventKind : byte
-{
-    None = 0,
-    Reward = 1,
-    Pressure = 2,
-    Scandal = 3,
-    Operator = 4,
 }
 
 [Serializable]
