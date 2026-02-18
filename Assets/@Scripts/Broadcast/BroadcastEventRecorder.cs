@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
+public sealed class BroadcastEventRecorder
 {
     private BroadcastEventLog _log;
     private readonly List<PhaseLog> _phases = new List<PhaseLog>(capacity: 4);
@@ -238,6 +238,41 @@ public sealed class BroadcastEventRecorder : IBroadcastEventRecorder
         };
     }
 
+    public BroadcastEventLog BuildSnapshotOrNull()
+    {
+        if (_log == null) return null;
+
+        // 진행 중일 때도 스냅샷을 준다
+        if (_eventActive)
+        {
+            var snapshot = CloneLogShallow(_log);
+
+            var list = new List<PhaseLog>(_phases);
+            if (_phaseActive)
+                list.Add(_currentPhase);
+
+            snapshot.phases = list.ToArray();
+            return snapshot;
+        }
+
+        // 이미 끝났으면 "마지막 확정 로그"를 스냅샷으로도 반환 가능
+        return _log;
+    }
+
+    public BroadcastEventLog BuildFinalLogOrNull()
+    {
+        if (_log == null) return null;
+
+        // EndEvent가 호출되어야만 확정본이다.
+        if (_eventActive)
+        {
+            Debug.LogWarning("[BroadcastEventRecorder] BuildFinalLogOrNull called while event is active. Call EndEvent first.");
+            return null;
+        }
+
+        return _log;
+    }
+    
     public BroadcastEventLog BuildLog()
     {
         if (_log == null)

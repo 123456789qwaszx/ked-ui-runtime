@@ -19,7 +19,7 @@ public sealed class ChatEngine : MonoBehaviour
     
     // ==== BroadcastEvent ====
     private ChatEngineDeps _deps;
-    private BroadcastEventSession _session;
+    private bool _eventOpen;
 
     private bool _running;
 
@@ -122,19 +122,33 @@ public sealed class ChatEngine : MonoBehaviour
     // ==== BroadcastEvent API====
     public void BeginEvent(string runId, string eventId, int eventIndex, double nowSec)
     {
-        _session = new BroadcastEventSession(runId, eventId, eventIndex, _deps.recorder);
-        _session.Begin(nowSec);
+        if (_deps.recorder == null)
+        {
+            Debug.LogError("[ChatEngine] recorder is null. Initialize deps first.", this);
+            return;
+        }
+
+        _deps.recorder.BeginEvent(runId, eventId, eventIndex, nowSec);
+        _eventOpen = true;
     }
 
     public void EndEvent(double nowSec)
     {
-        if (_session == null)
+        if (!_eventOpen || _deps.recorder == null)
             return;
 
-        BroadcastEventLog log = _session.End(nowSec);
+        _deps.recorder.EndEvent(nowSec);
+
+        // "확정 로그"만 받는다 (아래에서 Recorder 쪽 API를 분리할 것)
+        BroadcastEventLog log = _deps.recorder.BuildFinalLogOrNull();
+
+        _eventOpen = false;
+
+        if (log == null)
+            return;
 
         // (1) 로그 저장
-        _deps.repository.Add(log);
+        _deps.repository?.Add(log);
 
         // (2) 종료 파이프라인
         if (_deps.stateRepository != null && _deps.endPipeline != null)
@@ -145,8 +159,6 @@ public sealed class ChatEngine : MonoBehaviour
 
             _deps.onEventEnded?.Invoke(result);
         }
-
-        _session = null;
     }
 
     public void RecordDonation(int amount) => _deps.recorder.RecordDonation(amount);

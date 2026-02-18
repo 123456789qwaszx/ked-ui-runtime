@@ -11,7 +11,7 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     private LiveChatBindings _liveChatBindings;
 
     private IBroadcastLogRepository _repo;
-    private IBroadcastEventRecorder _recorder;
+    private BroadcastEventRecorder _recorder;
     private IIdolReactor _idol;
     
     private IBroadcastStateRepository _stateRepo;
