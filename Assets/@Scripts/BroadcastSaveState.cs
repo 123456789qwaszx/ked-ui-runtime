@@ -65,6 +65,27 @@ public sealed class BroadcastSaveState
 
     // (선택) “불길함 누적”을 한 값으로도 두고 싶다면
     public int gloom;                  // SoftFail 누적 지표(0..)
+    
+    public static BroadcastSaveState CreateNew(string runId)
+    {
+        if (string.IsNullOrEmpty(runId))
+            runId = "run_default";
+
+        return new BroadcastSaveState
+        {
+            runId = runId,
+            eventIndex = 0,
+            zoneScore = 50,
+            risk = 20,
+            promiseDebt = 0,
+            breachCount = 0,
+            graceRemaining = 1,
+            unlocks = UnlockFlags.None,
+            locks = LockFlags.None,
+            tokens = new List<TokenState>(16),
+            gloom = 0
+        };
+    }
 }
 
 [Serializable]

@@ -10,21 +10,19 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
 
     private LiveChatBindings _liveChatBindings;
 
-    private InMemoryBroadcastLogRepository _repo;
     private BroadcastEventLogRecorder _recorder;
     private SimpleIdolReactor _idol;
     
-    private InMemoryBroadcastStateRepository _stateRepo;
+    private InMemoryBroadcastStore _store;
     private BroadcastEndPipeline _endPipeline;
 
     private void Awake()
     {
-        _repo = new InMemoryBroadcastLogRepository();
         _recorder = new BroadcastEventLogRecorder();
         _idol = new SimpleIdolReactor();
 
-        // 영속 상태 저장소(P0: 메모리)
-        _stateRepo = new InMemoryBroadcastStateRepository();
+        // 영속 상태 및 로그 저장소(P0: 메모리)
+        _store = new InMemoryBroadcastStore();
 
         // 종료 파이프라인 구성(P0 기본값)
         _endPipeline = BuildEndPipelineP0();
@@ -33,10 +31,9 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
         Action<BroadcastEndResult> onEnded = DumpEndResultToConsole;
         
         ChatEngineDeps deps = new(
-            repository: _repo,
+            store: _store,
             recorder: _recorder,
             idolReactor: _idol,
-            stateRepository: _stateRepo,
             endPipeline: _endPipeline,
             onEventEnded: onEnded
         );

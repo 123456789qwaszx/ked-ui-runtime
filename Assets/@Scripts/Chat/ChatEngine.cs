@@ -16,7 +16,7 @@ public sealed class ChatEngine : MonoBehaviour
     private UnityChatRng _rng;
     private IChatPayloadSampler _chatPayloadSampler;
     private IChatRenderResolver _chatRenderResolver;
-    
+
     // ==== BroadcastEvent ====
     private ChatEngineDeps _deps;
     private bool _eventOpen;
@@ -26,7 +26,7 @@ public sealed class ChatEngine : MonoBehaviour
     public void Initialize(ChatEngineDeps deps)
     {
         _deps = deps;
-        
+
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
 
         _chatQueue = new Queue<ChatEvent>(256);
@@ -54,8 +54,6 @@ public sealed class ChatEngine : MonoBehaviour
 
         int kindCount = Enum.GetValues(typeof(ChatEventKind)).Length;
         _chatEngineRuntime.Reset(kindCount, profile.noRepeatTextWindowN);
-
-        // 시작 즉시 1개를 원하면 0, 조금 기다리면 NextNormalInterval로
         _chatEngineRuntime.timeUntilNextEmit = 0f;
 
         _running = true;
@@ -115,11 +113,11 @@ public sealed class ChatEngine : MonoBehaviour
     {
         if (!_running || !profile)
             return;
-        
+
         _chatEngineCore.Tick(profile, _chatEngineRuntime, Time.deltaTime, _chatQueue);
     }
-    
-    // ==== BroadcastEvent API====
+
+    // ==== BroadcastEvent API ====
     public void BeginEvent(string runId, string eventId, int eventIndex, double nowSec)
     {
         if (_deps.recorder == null)
@@ -139,7 +137,6 @@ public sealed class ChatEngine : MonoBehaviour
 
         _deps.recorder.CloseRecording(nowSec);
 
-        // "확정 로그"만 받는다 (아래에서 Recorder 쪽 API를 분리할 것)
         BroadcastEventLog log = _deps.recorder.GetFinalLogOrNull();
 
         _eventOpen = false;
@@ -147,15 +144,17 @@ public sealed class ChatEngine : MonoBehaviour
         if (log == null)
             return;
 
-        // (1) 로그 저장
-        _deps.repository?.Add(log);
+        // (1) 로그 저장 (Store)
+        _deps.store?.AppendLog(log);
 
-        // (2) 종료 파이프라인
-        if (_deps.stateRepository != null && _deps.endPipeline != null)
+        // (2) 종료 파이프라인 + State 저장 (Store)
+        if (_deps.store != null && _deps.endPipeline != null)
         {
-            BroadcastSaveState state = _deps.stateRepository.LoadOrCreate(log.runId);
+            BroadcastSaveState state = _deps.store.LoadOrCreateState(log.runId);
+
             BroadcastEndResult result = _deps.endPipeline.ProcessEnd(state, log);
-            _deps.stateRepository.Save(state);
+
+            _deps.store.SaveState(state);
 
             _deps.onEventEnded?.Invoke(result);
         }
@@ -178,9 +177,9 @@ public sealed class ChatEngine : MonoBehaviour
 
     public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
         => _deps.recorder.RecordDecision(kind, optionId, accepted);
-    
+
     public BroadcastEventLog GetLastSavedEventLogOrNull()
     {
-        return _deps.repository != null ? _deps.repository.GetLastOrNull() : null;
+        return _deps.store != null ? _deps.store.GetLastLogOrNull() : null;
     }
 }
