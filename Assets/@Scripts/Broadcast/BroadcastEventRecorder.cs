@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// BroadcastEvent 동안 발생한 관측을 Phase/Event 단위로 집계해
+// EndEvent 시점에 BroadcastEventLog를 생성.
 public sealed class BroadcastEventRecorder
 {
     private BroadcastEventLog _log;
@@ -16,38 +18,16 @@ public sealed class BroadcastEventRecorder
     public bool IsEventActive => _eventActive;
     public bool IsPhaseActive => _phaseActive;
 
-    public void BeginEvent(string runId, string eventId, int eventIndex, double startedAtSec)
+    public void OpenRecording(string runId, string eventId, int eventIndex, double startedAtSec)
     {
-        // 중복 시작 방지
+        // 중복 시작시 초기화
         if (_eventActive)
         {
             Debug.LogWarning("[BroadcastEventRecorder] BeginEvent called while event is active. Resetting previous state.");
             ResetInternal();
         }
 
-        _log = new BroadcastEventLog
-        {
-            runId = runId,
-            eventId = eventId,
-            eventIndex = eventIndex,
-            startedAtSec = startedAtSec,
-            endedAtSec = double.NaN,
-            phases = null,
-            indicesAtEnd = default,
-            
-            flags = BroadcastFlags.None,
-
-            operatorWarningCount = 0,
-            restrictionTriggeredCount = 0,
-            voteSplitCount = 0,
-            clipSeededCount = 0,
-            myMsgPinnedCount = 0,
-            idolDirectRequestCount = 0,
-            promiseAcceptedCount = 0,
-            promiseDodgedCount = 0,
-
-            dominantTag = ChatTag.Instinct, // 기본값
-        };
+        _log = BroadcastEventLog.CreateNew(runId, eventId, eventIndex, startedAtSec);
 
         _phases.Clear();
         _eventActive = true;
@@ -55,7 +35,7 @@ public sealed class BroadcastEventRecorder
         _currentPhaseIndex = -1;
     }
 
-    public void EndEvent(double endedAtSec)
+    public void CloseRecording(double endedAtSec)
     {
         if (!_eventActive)
         {
@@ -66,7 +46,7 @@ public sealed class BroadcastEventRecorder
         // Phase가 열려있으면 자동 마감(안전장치)
         if (_phaseActive)
         {
-            EndPhase(endedAtSec);
+            ClosePhase(endedAtSec);
         }
 
         _log.endedAtSec = endedAtSec;
@@ -77,14 +57,14 @@ public sealed class BroadcastEventRecorder
         _eventActive = false;
     }
 
-    public void BeginPhase(int phaseIndex, string phaseId, string profileKeyAtEnter, double startedAtSec)
+    public void OpenPhase(int phaseIndex, string phaseId, string profileKeyAtEnter, double startedAtSec)
     {
         EnsureEventActive();
 
         if (_phaseActive)
         {
             Debug.LogWarning("[BroadcastEventRecorder] BeginPhase called while phase is active. Auto-ending previous phase.");
-            EndPhase(startedAtSec);
+            ClosePhase(startedAtSec);
         }
 
         _currentPhaseIndex = phaseIndex;
@@ -117,7 +97,7 @@ public sealed class BroadcastEventRecorder
         _phaseActive = true;
     }
 
-    public void EndPhase(double endedAtSec)
+    public void ClosePhase(double endedAtSec)
     {
         if (!_phaseActive)
         {
@@ -238,7 +218,7 @@ public sealed class BroadcastEventRecorder
         };
     }
 
-    public BroadcastEventLog BuildFinalLogOrNull()
+    public BroadcastEventLog GetFinalLog()
     {
         if (_log == null) return null;
 

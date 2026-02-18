@@ -128,7 +128,7 @@ public sealed class ChatEngine : MonoBehaviour
             return;
         }
 
-        _deps.recorder.BeginEvent(runId, eventId, eventIndex, nowSec);
+        _deps.recorder.OpenRecording(runId, eventId, eventIndex, nowSec);
         _eventOpen = true;
     }
 
@@ -137,10 +137,10 @@ public sealed class ChatEngine : MonoBehaviour
         if (!_eventOpen || _deps.recorder == null)
             return;
 
-        _deps.recorder.EndEvent(nowSec);
+        _deps.recorder.CloseRecording(nowSec);
 
         // "확정 로그"만 받는다 (아래에서 Recorder 쪽 API를 분리할 것)
-        BroadcastEventLog log = _deps.recorder.BuildFinalLogOrNull();
+        BroadcastEventLog log = _deps.recorder.GetFinalLog();
 
         _eventOpen = false;
 
@@ -172,9 +172,9 @@ public sealed class ChatEngine : MonoBehaviour
     }
 
     public void BeginPhase(int phaseIndex, string phaseId, string profileKeyAtEnter, double nowSec)
-        => _deps.recorder.BeginPhase(phaseIndex, phaseId, profileKeyAtEnter, nowSec);
+        => _deps.recorder.OpenPhase(phaseIndex, phaseId, profileKeyAtEnter, nowSec);
 
-    public void EndPhase(double nowSec) => _deps.recorder.EndPhase(nowSec);
+    public void EndPhase(double nowSec) => _deps.recorder.ClosePhase(nowSec);
 
     public void RecordDecision(PhaseDecisionKind kind, string optionId, bool accepted)
         => _deps.recorder.RecordDecision(kind, optionId, accepted);

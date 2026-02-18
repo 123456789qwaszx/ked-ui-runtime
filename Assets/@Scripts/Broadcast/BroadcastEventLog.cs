@@ -89,6 +89,26 @@ public sealed class BroadcastEventLog
 
     // (선택) “이번 방송의 최종 태도”를 하나로 요약하고 싶다면
     public ChatTag dominantTag; // Instinct/Analysis/Chaos 중 최다
+    
+    public static BroadcastEventLog CreateNew(string runId, string eventId, int eventIndex, double startedAtSec)
+    {
+        return new BroadcastEventLog
+        {
+            runId = runId,
+            eventId = eventId,
+            eventIndex = eventIndex,
+            startedAtSec = startedAtSec,
+
+            endedAtSec = double.NaN,
+            phases = null,
+            indicesAtEnd = default,
+
+            flags = BroadcastFlags.None,
+            dominantTag = ChatTag.Instinct,
+
+            // 나머지 int/long은 0이 기본이라 굳이 안 적어도 됨
+        };
+    }
 }
 
 /// <summary>
