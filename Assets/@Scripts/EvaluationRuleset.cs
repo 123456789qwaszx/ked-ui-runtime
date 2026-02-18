@@ -9,7 +9,7 @@ public sealed class EvaluationRuleset
 
     public int contractZoneTargetDelta = 10; // 기본: 방송당 +10 목표
 
-    public EvaluationResult Evaluate(BroadcastSaveState state, BroadcastEventLog log, Deltas deltas)
+    public EvaluationResult Evaluate(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
     {
         // 1) 계약 달성 여부(예: ZoneDelta가 목표 이상이면 달성)
         bool contractMet = deltas.zone >= contractZoneTargetDelta;

@@ -1,4 +1,4 @@
-public sealed class DeltaRuleset
+public sealed class BroadcastScoringRules
 {
     // 임계치(판정 테이블이랑 같이 쓰임)
     public int riskSoftThreshold = 60;
@@ -36,7 +36,7 @@ public sealed class DeltaRuleset
     public int riskPerChaos = 2;
     public int zonePerChaos = 0;         // 혼돈은 성과가 튀기도 하지만 P0에선 0으로 시작
 
-    public Deltas ComputeDeltas(BroadcastEventLog log)
+    public BroadcastScoreDelta ComputeScoredDeltas(BroadcastEventLog log)
     {
         int zone = zoneBase;
         int risk = riskBase;
@@ -74,17 +74,17 @@ public sealed class DeltaRuleset
         promise += log.chaosCountTotal * promisePerChaos;
         promise += log.instinctCountTotal * promisePerInstinct;
 
-        return new Deltas(zone, risk, promise);
+        return new BroadcastScoreDelta(zone, risk, promise);
     }
 }
 
-public readonly struct Deltas
+public readonly struct BroadcastScoreDelta
 {
     public readonly int zone;
     public readonly int risk;
     public readonly int promise;
 
-    public Deltas(int zone, int risk, int promise)
+    public BroadcastScoreDelta(int zone, int risk, int promise)
     {
         this.zone = zone;
         this.risk = risk;

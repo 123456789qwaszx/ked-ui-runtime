@@ -9,7 +9,7 @@ public sealed class TokenRuleset
     public const string Token_OperatorWatch = "token_operator_watch";
     public const string Token_BigDonor = "token_big_donor";
 
-    public TokenDelta[] ApplyTokens(BroadcastSaveState state, BroadcastEventLog log, Deltas deltas)
+    public TokenDelta[] ApplyTokens(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
     {
         var outList = new List<TokenDelta>(4);
 

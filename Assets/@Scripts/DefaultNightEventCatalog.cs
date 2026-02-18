@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public interface INightEventCatalog
 {
     // 조건에 맞는 후보를 반환
-    void CollectCandidates(BroadcastSaveState state, BroadcastEventLog log, Deltas deltas, EvaluationResult eval, List<NightEventCandidate> outList);
+    void CollectCandidates(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas, EvaluationResult eval, List<NightEventCandidate> outList);
 }
 
 public struct NightEventCandidate
@@ -20,7 +20,7 @@ public struct NightEventCandidate
 
 public sealed class DefaultNightEventCatalog : INightEventCatalog
 {
-    public void CollectCandidates(BroadcastSaveState state, BroadcastEventLog log, Deltas deltas, EvaluationResult eval, List<NightEventCandidate> outList)
+    public void CollectCandidates(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas, EvaluationResult eval, List<NightEventCandidate> outList)
     {
         // Critical/Breach 우선
         if (eval.grade == EvalGrade.Critical)
@@ -82,7 +82,7 @@ public sealed class DefaultNightEventCatalog : INightEventCatalog
 
 public static class NightEventSelector
 {
-    public static NightEventPayload SelectOne(INightEventCatalog catalog, BroadcastSaveState state, BroadcastEventLog log, Deltas deltas, EvaluationResult eval)
+    public static NightEventPayload SelectOne(INightEventCatalog catalog, BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas, EvaluationResult eval)
     {
         var list = new List<NightEventCandidate>(8);
         catalog.CollectCandidates(state, log, deltas, eval, list);

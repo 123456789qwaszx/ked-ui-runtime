@@ -2,7 +2,7 @@ using UnityEngine;
 
 public static class RecapBuilder
 {
-    public static RecapLine Build(BroadcastEventLog log, Deltas deltas, EvaluationResult eval, TokenDelta[] tokenDeltas, LockFlags locksAdded)
+    public static RecapLine Build(BroadcastEventLog log, BroadcastScoreDelta deltas, EvaluationResult eval, TokenDelta[] tokenDeltas, LockFlags locksAdded)
     {
         // 1) 요약 문장 선택(간단 버전): 가장 큰 절대 델타 축으로
         string summary = PickSummary(deltas, eval, log);
@@ -65,7 +65,7 @@ public static class RecapBuilder
         return new RecapLine { summaryText = summary, changes = changes };
     }
 
-    private static string PickSummary(Deltas deltas, EvaluationResult eval, BroadcastEventLog log)
+    private static string PickSummary(BroadcastScoreDelta deltas, EvaluationResult eval, BroadcastEventLog log)
     {
         // Critical 우선
         if (eval.grade == EvalGrade.Critical)

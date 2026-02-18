@@ -54,7 +54,7 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     
     private static BroadcastEndPipeline BuildEndPipelineP0()
     {
-        var delta = new DeltaRuleset();
+        var delta = new BroadcastScoringRules();
         var token = new TokenRuleset();
         var eval = new EvaluationRuleset();
         var night = new DefaultNightEventCatalog();

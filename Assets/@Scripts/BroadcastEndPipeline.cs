@@ -2,14 +2,14 @@ using UnityEngine;
 
 public sealed class BroadcastEndPipeline
 {
-    private readonly DeltaRuleset _deltaRules;
+    private readonly BroadcastScoringRules _deltaRules;
     private readonly TokenRuleset _tokenRules;
     private readonly EvaluationRuleset _evalRules;
     private readonly INightEventCatalog _nightCatalog;
     private readonly ContractBuilder _contractBuilder;
 
     public BroadcastEndPipeline(
-        DeltaRuleset deltaRules,
+        BroadcastScoringRules deltaRules,
         TokenRuleset tokenRules,
         EvaluationRuleset evalRules,
         INightEventCatalog nightCatalog,
@@ -25,7 +25,7 @@ public sealed class BroadcastEndPipeline
     public BroadcastEndResult ProcessEnd(BroadcastSaveState state, BroadcastEventLog log)
     {
         // 1) 로그 → 델타
-        Deltas deltas = _deltaRules.ComputeDeltas(log);
+        BroadcastScoreDelta deltas = _deltaRules.ComputeScoredDeltas(log);
 
         // 2) State 업데이트(수치)
         state.zoneScore += deltas.zone;
