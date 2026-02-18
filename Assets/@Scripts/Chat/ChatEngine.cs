@@ -140,7 +140,7 @@ public sealed class ChatEngine : MonoBehaviour
         _deps.recorder.CloseRecording(nowSec);
 
         // "확정 로그"만 받는다 (아래에서 Recorder 쪽 API를 분리할 것)
-        BroadcastEventLog log = _deps.recorder.GetFinalLog();
+        BroadcastEventLog log = _deps.recorder.GetFinalLogOrNull();
 
         _eventOpen = false;
 

@@ -11,7 +11,7 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     private LiveChatBindings _liveChatBindings;
 
     private IBroadcastLogRepository _repo;
-    private BroadcastEventRecorder _recorder;
+    private BroadcastEventLogRecorder _recorder;
     private IIdolReactor _idol;
     
     private IBroadcastStateRepository _stateRepo;
@@ -20,7 +20,7 @@ public sealed class LiveStreamBootstrap : MonoBehaviour
     private void Awake()
     {
         _repo = new InMemoryBroadcastLogRepository();
-        _recorder = new BroadcastEventRecorder();
+        _recorder = new BroadcastEventLogRecorder();
         _idol = new SimpleIdolReactor();
 
         // 영속 상태 저장소(P0: 메모리)

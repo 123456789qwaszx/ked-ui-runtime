@@ -143,6 +143,21 @@ public struct PhaseLog
     // ----- Intermission decision (Phase 전환 선택) -----
     public bool hasDecision;
     public PhaseDecisionLog decision;
+    
+    public static PhaseLog CreateNew(int phaseIndex, string phaseId, string profileKeyAtEnter, double startedAtSec)
+    {
+        return new PhaseLog
+        {
+            phaseIndex = phaseIndex,
+            phaseId = phaseId,
+            profileKeyAtEnter = profileKeyAtEnter,
+            startedAtSec = startedAtSec,
+            endedAtSec = double.NaN,
+            hasDecision = false,
+            decision = default
+            // 나머지는 struct 기본값 0이라 생략
+        };
+    }
 }
 
 /// <summary>

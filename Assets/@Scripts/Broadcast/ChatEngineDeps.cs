@@ -9,7 +9,7 @@ public interface IBroadcastStateRepository
 public readonly struct ChatEngineDeps
 {
     public readonly IBroadcastLogRepository repository;
-    public readonly BroadcastEventRecorder recorder;
+    public readonly BroadcastEventLogRecorder recorder;
     public readonly IIdolReactor idolReactor;
 
     public readonly IBroadcastStateRepository stateRepository;
@@ -20,7 +20,7 @@ public readonly struct ChatEngineDeps
     
     public ChatEngineDeps(
         IBroadcastLogRepository repository,
-        BroadcastEventRecorder recorder,
+        BroadcastEventLogRecorder recorder,
         IIdolReactor idolReactor,
         IBroadcastStateRepository stateRepository,
         BroadcastEndPipeline endPipeline,
