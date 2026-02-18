@@ -37,8 +37,8 @@ public sealed class BroadcastEndPipeline
         state.risk = Mathf.Clamp(state.risk, 0, 100);
         state.promiseDebt = Mathf.Max(0, state.promiseDebt);
 
-        // 3) 델타 → 토큰
-        TokenDelta[] tokenDeltas = _tokenRules.ApplyTokens(state, log, deltas);
+        // 3) 델타 → 토큰 변환 및 state에 적립
+        TokenDelta[] tokenDeltas = _tokenRules.GrantTokens(state, log, deltas);
 
         // 4) 평가(판정 + SoftFail 잠금)
         EvaluationResult eval = _evalRules.Evaluate(state, log, deltas);

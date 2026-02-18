@@ -27,23 +27,6 @@ public struct SettlementPayload
     public LockFlags lockRemoved;     // 필요하면
 }
 
-public enum TokenDeltaKind : byte
-{
-    Added = 0,
-    Stacked = 1,
-    Removed = 2,
-    Refreshed = 3,
-}
-
-[Serializable]
-public struct TokenDelta
-{
-    public TokenDeltaKind kind;
-    public string tokenId;
-    public int stackDelta;        // +1 등
-    public string effectText;     // “다음 방송 Risk 시작값 +15” 같은 1줄 영향력(필수)
-}
-
 [Serializable]
 public struct EvaluationPayload
 {

@@ -1,5 +1,23 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+public enum TokenDeltaKind : byte
+{
+    Added = 0,
+    Stacked = 1,
+    Removed = 2,
+    Refreshed = 3,
+}
+
+[Serializable]
+public struct TokenDelta
+{
+    public TokenDeltaKind kind;
+    public string tokenId;
+    public int stackDelta;        // +1 등
+    public string effectText;     // “다음 방송 Risk 시작값 +15” 같은 1줄 영향력(필수)
+}
 
 public sealed class TokenRuleset
 {
@@ -9,7 +27,7 @@ public sealed class TokenRuleset
     public const string Token_OperatorWatch = "token_operator_watch";
     public const string Token_BigDonor = "token_big_donor";
 
-    public TokenDelta[] ApplyTokens(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
+    public TokenDelta[] GrantTokens(BroadcastSaveState state, BroadcastEventLog log, BroadcastScoreDelta deltas)
     {
         var outList = new List<TokenDelta>(4);
 
