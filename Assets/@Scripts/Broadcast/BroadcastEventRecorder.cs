@@ -238,27 +238,6 @@ public sealed class BroadcastEventRecorder
         };
     }
 
-    public BroadcastEventLog BuildSnapshotOrNull()
-    {
-        if (_log == null) return null;
-
-        // 진행 중일 때도 스냅샷을 준다
-        if (_eventActive)
-        {
-            var snapshot = CloneLogShallow(_log);
-
-            var list = new List<PhaseLog>(_phases);
-            if (_phaseActive)
-                list.Add(_currentPhase);
-
-            snapshot.phases = list.ToArray();
-            return snapshot;
-        }
-
-        // 이미 끝났으면 "마지막 확정 로그"를 스냅샷으로도 반환 가능
-        return _log;
-    }
-
     public BroadcastEventLog BuildFinalLogOrNull()
     {
         if (_log == null) return null;
@@ -271,75 +250,6 @@ public sealed class BroadcastEventRecorder
         }
 
         return _log;
-    }
-    
-    public BroadcastEventLog BuildLog()
-    {
-        if (_log == null)
-        {
-            Debug.LogWarning("[BroadcastEventRecorder] BuildLog called but log is null. Did you call BeginEvent?");
-            return null;
-        }
-
-        // EndEvent 호출 전이라면, 현재 상태 스냅샷으로 phases 배열을 만들어서 돌려줌(디버그 편의)
-        if (_eventActive)
-        {
-            var snapshot = CloneLogShallow(_log);
-
-            // 진행 중 Phase가 있으면 임시로 포함
-            var list = new List<PhaseLog>(_phases);
-            if (_phaseActive)
-                list.Add(_currentPhase);
-
-            snapshot.phases = list.ToArray();
-            return snapshot;
-        }
-
-        // EndEvent가 이미 호출되었다면 _log.phases가 확정되어 있음
-        return _log;
-    }
-
-    private static BroadcastEventLog CloneLogShallow(BroadcastEventLog src)
-    {
-        if (src == null) return null;
-
-        return new BroadcastEventLog
-        {
-            runId = src.runId,
-            eventId = src.eventId,
-            eventIndex = src.eventIndex,
-            startedAtSec = src.startedAtSec,
-            endedAtSec = src.endedAtSec,
-
-            donationCountTotal = src.donationCountTotal,
-            donationSumTotal = src.donationSumTotal,
-
-            emojiCountTotal = src.emojiCountTotal,
-            chatLineCountTotal = src.chatLineCountTotal,
-
-            instinctCountTotal = src.instinctCountTotal,
-            analysisCountTotal = src.analysisCountTotal,
-            chaosCountTotal = src.chaosCountTotal,
-
-            idolPositiveReactTotal = src.idolPositiveReactTotal,
-            idolNegativeReactTotal = src.idolNegativeReactTotal,
-            idolNeutralReactTotal = src.idolNeutralReactTotal,
-
-            
-            flags = src.flags,
-            operatorWarningCount = src.operatorWarningCount,
-            restrictionTriggeredCount = src.restrictionTriggeredCount,
-            voteSplitCount = src.voteSplitCount,
-            clipSeededCount = src.clipSeededCount,
-            myMsgPinnedCount = src.myMsgPinnedCount,
-            idolDirectRequestCount = src.idolDirectRequestCount,
-            promiseAcceptedCount = src.promiseAcceptedCount,
-            promiseDodgedCount = src.promiseDodgedCount,
-            dominantTag = src.dominantTag,
-
-            phases = src.phases,
-            indicesAtEnd = src.indicesAtEnd
-        };
     }
 
     private void EnsureEventActive()
