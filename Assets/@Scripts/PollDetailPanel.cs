@@ -10,39 +10,37 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
 
     public enum Refs
     {
-        Root_Root,
-        Header_Root,
-
+        PollDetailTitle_Root,
         TitleText_Text,
         SubtitleText_Text,
-        DescText_Text,
-
-        TagRow_Root,
-        Tag0_Text,
-        Tag1_Text,
-        Tag2_Text,
+        DescriptionText_Text,
 
         RewardHeader_Root,
-        RewardHeaderText_Text,
+        RewardHeader_Image,
+        RewardHeader_Text,
+
         RewardList_Root,
 
-        Reward0_Root,
-        Reward0_Icon_Image,
-        Reward0_AmountText_Text,
+        Reward0Root,
+        Reward0Icon_Image,
+        Reward0Amount_Text,
 
-        Reward1_Root,
-        Reward1_Icon_Image,
-        Reward1_AmountText_Text,
+        Reward1Root,
+        Reward1Icon_Image,
+        Reward1Amount_Text,
 
-        Reward2_Root,
-        Reward2_Icon_Image,
-        Reward2_AmountText_Text,
+        Reward2Root,
+        Reward2Icon_Image,
+        Reward2Amount_Text,
 
-        Requirement_Root,
-        RequirementText_Text,
+        Reward3Root,
+        Reward3Icon_Image,
+        Reward3Amount_Text,
 
-        Confirm_Button,
-        ConfirmText_Text,
+        ConfirmButton_Root,
+        ConfirmButton_Image,
+        ConfirmButton_Text,
+        ConfirmButton_Button
     }
 
     // Cache
@@ -50,25 +48,28 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
 
     private CanvasGroup _rootCg;
 
+    // Title
+    private RectTransform _titleRoot;
     private TMP_Text _title;
     private TMP_Text _subtitle;
     private TMP_Text _desc;
 
-    private RectTransform _tagRow;
-    private TMP_Text[] _tags;
+    // Reward header + list
+    private RectTransform _rewardHeaderRoot;
+    private Image _rewardHeaderImage;
+    private TMP_Text _rewardHeaderText;
 
-    private TMP_Text _rewardHeader;
-    private RectTransform _rewardList;
+    private RectTransform _rewardListRoot;
 
     private RectTransform[] _rewardRoots;
     private Image[] _rewardIcons;
     private TMP_Text[] _rewardAmounts;
 
-    private RectTransform _reqRoot;
-    private TMP_Text _reqText;
-
-    private Button _confirmBtn;
+    // Confirm
+    private RectTransform _confirmRoot;
+    private Image _confirmImage;
     private TMP_Text _confirmText;
+    private Button _confirmBtn;
 
     protected override void Initialize()
     {
@@ -80,60 +81,64 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
 #else
         _valid = true;
 #endif
+
         BindHandlers();
 
-        // Default closed (UIBase PreInitialize에서 이미 CloseByCanvasGroup 처리됨)
+        // Default
         SetConfirmInteractable(false);
-        SetRequirementVisible(false);
         SetRewardCount(0);
-        SetTags(null);
     }
 
     private void CacheRefs()
     {
-        _rootCg = View.CanvasGroup(Refs.Root_Root);
+        // 루트 CanvasGroup: enum에 Root 키가 없으므로 컴포넌트에서 직접 확보
+        _rootCg = GetComponent<CanvasGroup>();
+        if (!_rootCg)
+            _rootCg = gameObject.AddComponent<CanvasGroup>();
 
+        // Title
+        _titleRoot = View.Rect(Refs.PollDetailTitle_Root);
         _title = View.Text(Refs.TitleText_Text);
         _subtitle = View.Text(Refs.SubtitleText_Text);
-        _desc = View.Text(Refs.DescText_Text);
+        _desc = View.Text(Refs.DescriptionText_Text);
 
-        _tagRow = View.Rect(Refs.TagRow_Root);
-        _tags = new[]
-        {
-            View.Text(Refs.Tag0_Text),
-            View.Text(Refs.Tag1_Text),
-            View.Text(Refs.Tag2_Text),
-        };
+        // Reward header
+        _rewardHeaderRoot = View.Rect(Refs.RewardHeader_Root);
+        _rewardHeaderImage = View.Image(Refs.RewardHeader_Image);
+        _rewardHeaderText = View.Text(Refs.RewardHeader_Text);
 
-        _rewardHeader = View.Text(Refs.RewardHeaderText_Text);
-        _rewardList = View.Rect(Refs.RewardList_Root);
+        // Reward list
+        _rewardListRoot = View.Rect(Refs.RewardList_Root);
 
         _rewardRoots = new[]
         {
-            View.Rect(Refs.Reward0_Root),
-            View.Rect(Refs.Reward1_Root),
-            View.Rect(Refs.Reward2_Root),
+            View.Rect(Refs.Reward0Root),
+            View.Rect(Refs.Reward1Root),
+            View.Rect(Refs.Reward2Root),
+            View.Rect(Refs.Reward3Root),
         };
 
         _rewardIcons = new[]
         {
-            View.Image(Refs.Reward0_Icon_Image),
-            View.Image(Refs.Reward1_Icon_Image),
-            View.Image(Refs.Reward2_Icon_Image),
+            View.Image(Refs.Reward0Icon_Image),
+            View.Image(Refs.Reward1Icon_Image),
+            View.Image(Refs.Reward2Icon_Image),
+            View.Image(Refs.Reward3Icon_Image),
         };
 
         _rewardAmounts = new[]
         {
-            View.Text(Refs.Reward0_AmountText_Text),
-            View.Text(Refs.Reward1_AmountText_Text),
-            View.Text(Refs.Reward2_AmountText_Text),
+            View.Text(Refs.Reward0Amount_Text),
+            View.Text(Refs.Reward1Amount_Text),
+            View.Text(Refs.Reward2Amount_Text),
+            View.Text(Refs.Reward3Amount_Text),
         };
 
-        _reqRoot = View.Rect(Refs.Requirement_Root);
-        _reqText = View.Text(Refs.RequirementText_Text);
-
-        _confirmBtn = View.Button(Refs.Confirm_Button);
-        _confirmText = View.Text(Refs.ConfirmText_Text);
+        // Confirm
+        _confirmRoot = View.Rect(Refs.ConfirmButton_Root);
+        _confirmImage = View.Image(Refs.ConfirmButton_Image);
+        _confirmText = View.Text(Refs.ConfirmButton_Text);
+        _confirmBtn = View.Button(Refs.ConfirmButton_Button);
     }
 
     private void BindHandlers()
@@ -159,20 +164,10 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
         if (_desc) _desc.text = desc ?? "";
     }
 
-    public void SetTags(string[] tags)
+    public void SetRewardHeader(string headerText)
     {
         if (!_valid) return;
-
-        bool any = tags != null && tags.Length > 0;
-        if (_tagRow) _tagRow.gameObject.SetActive(any);
-
-        for (int i = 0; i < _tags.Length; i++)
-        {
-            if (!_tags[i]) continue;
-            string t = (tags != null && i < tags.Length) ? tags[i] : null;
-            _tags[i].gameObject.SetActive(!string.IsNullOrEmpty(t));
-            _tags[i].text = t ?? "";
-        }
+        if (_rewardHeaderText) _rewardHeaderText.text = headerText ?? "";
     }
 
     public void SetRewardCount(int count)
@@ -181,11 +176,13 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
 
         count = Mathf.Clamp(count, 0, _rewardRoots.Length);
 
-        if (_rewardList) _rewardList.gameObject.SetActive(count > 0);
+        if (_rewardListRoot)
+            _rewardListRoot.gameObject.SetActive(count > 0);
 
         for (int i = 0; i < _rewardRoots.Length; i++)
         {
-            if (_rewardRoots[i]) _rewardRoots[i].gameObject.SetActive(i < count);
+            if (_rewardRoots[i])
+                _rewardRoots[i].gameObject.SetActive(i < count);
         }
     }
 
@@ -198,18 +195,12 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
         if (_rewardAmounts[index]) _rewardAmounts[index].text = amountText ?? "";
     }
 
-    public void SetRequirementVisible(bool visible, string text = null)
-    {
-        if (!_valid) return;
-        if (_reqRoot) _reqRoot.gameObject.SetActive(visible);
-        if (visible && _reqText) _reqText.text = text ?? "";
-    }
-
     public void SetConfirmInteractable(bool interactable, string buttonText = null)
     {
         if (!_valid) return;
 
         if (_confirmBtn) _confirmBtn.interactable = interactable;
+
         if (_confirmText)
         {
             if (!string.IsNullOrEmpty(buttonText)) _confirmText.text = buttonText;
@@ -233,18 +224,24 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
     {
         string missing = "";
 
-        AppendMissing(ref missing, _rootCg, Refs.Root_Root);
+        // Root cg is always ensured (auto-added), so no strict check here.
 
+        AppendMissing(ref missing, _titleRoot, Refs.PollDetailTitle_Root);
         AppendMissing(ref missing, _title, Refs.TitleText_Text);
-        AppendMissing(ref missing, _desc, Refs.DescText_Text);
+        AppendMissing(ref missing, _desc, Refs.DescriptionText_Text);
 
-        AppendMissing(ref missing, _confirmBtn, Refs.Confirm_Button);
+        AppendMissing(ref missing, _rewardListRoot, Refs.RewardList_Root);
+
+        // Confirm is essential
+        AppendMissing(ref missing, _confirmBtn, Refs.ConfirmButton_Button);
+        AppendMissing(ref missing, _confirmText, Refs.ConfirmButton_Text);
 
         if (missing.Length > 0)
         {
             Debug.LogWarning($"[PollDetailPanel] Missing refs:\n{missing}", this);
             return false;
         }
+
         return true;
     }
 }
