@@ -164,7 +164,7 @@ public sealed class BroadcastEndPanel : UIPanel<BroadcastEndPanel.Refs>
 
         _initialized = true;
 
-        // ✅ Initialize 전에 SetData가 들어왔으면 이제 적용
+        // Initialize 전에 SetData가 들어왔으면 이제 적용
         if (_pending != null)
         {
             Apply(_pending);
