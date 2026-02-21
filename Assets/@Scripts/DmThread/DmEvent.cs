@@ -32,9 +32,6 @@ public struct DmLine
     public DmEntryKind kind;   // Incoming/Outgoing/System
     public string speaker;     // "라비" / "나" / ""(system)
     public string text;
-
-    public float typingSeconds; // (아직 미사용이지만 남겨도 됨)
-    public bool waitForTap;     // 라인 단위로만 남겨두기 OK
 }
 
 [Serializable]

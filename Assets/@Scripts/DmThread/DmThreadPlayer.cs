@@ -25,11 +25,6 @@ public sealed class DmThreadPlayer
 
     private bool _inputBlocked;
 
-    // Auto
-    private bool _autoEnabled;
-    private float _autoDelaySeconds = 1.2f;
-    private float _autoCountdown;
-
     // Choice
     private DmChoice _activeChoice;
     private string _activeEventId;
@@ -49,8 +44,6 @@ public sealed class DmThreadPlayer
         _activeChoice = default;
         _activeEventId = null;
 
-        _autoCountdown = _autoDelaySeconds;
-
         BuildIndex();
 
         if (clearUi)
@@ -60,26 +53,6 @@ public sealed class DmThreadPlayer
 
         Step();
     }
-
-    public void Tick(float unscaledDeltaTime)
-    {
-        if (_state == State.Completed || _state == State.Idle)
-            return;
-
-        if (!_autoEnabled || _inputBlocked)
-            return;
-
-        if (_state == State.WaitingTap)
-        {
-            _autoCountdown -= unscaledDeltaTime;
-            if (_autoCountdown <= 0f)
-            {
-                _autoCountdown = _autoDelaySeconds;
-                RequestAdvance();
-            }
-        }
-    }
-
     public void RequestAdvance()
     {
         if (_inputBlocked) return;
@@ -194,13 +167,6 @@ public sealed class DmThreadPlayer
 
         _panel.AppendEntry(model);
         _panel.ScrollToBottom();
-
-        if (line.waitForTap)
-        {
-            _state = State.WaitingTap;
-            _autoCountdown = _autoDelaySeconds;
-            return;
-        }
 
         _cursor++;
         _state = State.Playing;
