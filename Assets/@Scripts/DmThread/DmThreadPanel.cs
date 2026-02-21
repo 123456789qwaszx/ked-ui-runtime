@@ -92,7 +92,7 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
         GameObject go = Instantiate(template.gameObject);
         DmEntryView view = go.GetComponent<DmEntryView>();
 
-        view.transform.SetParent(_content);
+        view.transform.SetParent(_content, false);
 
         view.Present(model);
 
@@ -107,7 +107,7 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
         GameObject go = Instantiate(tplChoice.gameObject);
         var view = go.GetComponent<DmChoiceView>();
 
-        view.transform.SetParent(_content);
+        view.transform.SetParent(_content, false);
         view.Present(choice, onPick);
 
         _activeEntries.Add(go);
@@ -132,7 +132,7 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
     {
         if (!_valid)
             return;
-
+        
         _rootCg.alpha = visible ? 1f : 0f;
         _rootCg.interactable = visible;
         _rootCg.blocksRaycasts = visible;

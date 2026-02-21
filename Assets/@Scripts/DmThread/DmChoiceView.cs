@@ -12,7 +12,7 @@ public sealed class DmChoiceView : MonoBehaviour
 
     private Action<int> _onPick;
 
-    public void Present(in DmChoice choice, Action<int> onPick)
+    public void Present(DmChoice choice, Action<int> onPick)
     {
         _onPick = onPick;
 

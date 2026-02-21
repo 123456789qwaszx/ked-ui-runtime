@@ -60,6 +60,9 @@ public partial class UIManager : MonoBehaviour
     public void Init()
     {
         RegisterChildUIs();
+        
+        SwitchRootPatched<BroadcastHubUIRoot>();
+        GetUI<BroadcastHubUIRoot>().ShowTab(BroadcastHubUIRoot.TabKind.Sns);
     }
 
     private void RegisterChildUIs()

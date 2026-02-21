@@ -116,6 +116,8 @@ public class TestLauncher : MonoBehaviour
 
     public void StartLive()
     {
+        UIManager.Instance.PopAllPanels();
+        
         UIManager.Instance.SwitchRootPatched<LiveUIRoot>();
         LiveUIRoot liveUIRoot = UIManager.Instance.GetUI<LiveUIRoot>();
         _liveFlowController.BindLiveUIRoot(liveUIRoot);

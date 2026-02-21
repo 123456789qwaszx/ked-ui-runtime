@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static UIRefValidation;
 
-public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
+public sealed class PollDetailPanel : UIPanel<PollDetailPanel.Refs>
 {
     public event Action OnConfirmRequested;
 
@@ -153,7 +153,13 @@ public sealed class PollDetailPanel : UIBase<PollDetailPanel.Refs>, IUIPanel
     public void Show(bool visible)
     {
         if (!_valid) return;
-        SetCanvasGroupVisible(_rootCg, visible);
+
+        if (visible) UIManager.Instance.PushPanelPatched<PollDetailPanel>();
+        else
+        {
+            UIManager.Instance.PopPanel();
+        }
+        //SetCanvasGroupVisible(_rootCg, visible);
     }
 
     public void SetTexts(string title, string subtitle, string desc)

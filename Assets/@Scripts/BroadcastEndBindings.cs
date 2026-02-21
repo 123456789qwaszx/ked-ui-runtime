@@ -40,6 +40,9 @@ public sealed class BroadcastEndBindings : IDisposable
     {
         _bound?.SetVisible(false);
         _onClose?.Invoke();
+        
+        UIManager.Instance.SwitchRootPatched<BroadcastHubUIRoot>();
+        UIManager.Instance.GetUI<BroadcastHubUIRoot>().ShowTab(BroadcastHubUIRoot.TabKind.Sns);
     }
 
     private void HandleContinue(string nightEventKey)
