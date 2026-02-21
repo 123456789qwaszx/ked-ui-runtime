@@ -7,13 +7,6 @@ public enum DmEventKind : byte
     Marker = 2,
 }
 
-public enum DmSide : byte
-{
-    Idol = 0,
-    Player = 1,
-    System = 2,
-}
-
 [Serializable]
 public struct DmScript
 {
@@ -36,12 +29,12 @@ public struct DmEvent
 [Serializable]
 public struct DmLine
 {
-    public DmSide side;
-    public string speaker;         // "라비" / "나" / ""(system)
+    public DmEntryKind kind;   // Incoming/Outgoing/System
+    public string speaker;     // "라비" / "나" / ""(system)
     public string text;
 
-    public float typingSeconds;    // 0이면 즉시 표시
-    public bool waitForTap;        // 기본 true 추천
+    public float typingSeconds; // (아직 미사용이지만 남겨도 됨)
+    public bool waitForTap;     // 라인 단위로만 남겨두기 OK
 }
 
 [Serializable]
@@ -49,7 +42,6 @@ public struct DmChoice
 {
     public string prompt;
     public DmChoiceOption[] options;
-    public bool waitForTap;        // 선택 완료까지 대기(기본 true)
 }
 
 [Serializable]

@@ -39,20 +39,6 @@ public sealed class DmThreadPlayer
         _panel = panel;
     }
 
-    public void SetInputBlocked(bool blocked)
-    {
-        _inputBlocked = blocked;
-        // 패널이 input block 정책을 갖고 있다면 여기서 전달(없으면 삭제해도 됨)
-        // _panel.SetInputBlocked(blocked);
-    }
-
-    public void SetAutoEnabled(bool enabled)
-    {
-        _autoEnabled = enabled;
-        if (_autoEnabled)
-            _autoCountdown = _autoDelaySeconds;
-    }
-
     public void StartDm(DmScript script, bool clearUi = true)
     {
         _script = script;
@@ -200,28 +186,25 @@ public sealed class DmThreadPlayer
 
     private void PlayLine(string eventId, in DmLine line)
     {
-        var kind = ConvertKind(line.side);
-        string name = line.speaker ?? "";
-        string text = line.text ?? "";
+        var model = new DmEntryModel(
+            line.kind,
+            line.speaker ?? "",
+            line.text ?? ""
+        );
 
-        var model = new DmEntryModel(kind, name, text);
         _panel.AppendEntry(model);
-
         _panel.ScrollToBottom();
 
-        bool waitForTap = line.waitForTap;
-
-        if (waitForTap)
+        if (line.waitForTap)
         {
             _state = State.WaitingTap;
             _autoCountdown = _autoDelaySeconds;
+            return;
         }
-        else
-        {
-            _cursor++;
-            _state = State.Playing;
-            Step();
-        }
+
+        _cursor++;
+        _state = State.Playing;
+        Step();
     }
 
     private void ShowChoice(string eventId, in DmChoice choice)
@@ -253,16 +236,5 @@ public sealed class DmThreadPlayer
         _state = State.Completed;
 
         OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.Completed, _activeEventId ?? "", ""));
-    }
-
-    private static DmEntryKind ConvertKind(DmSide side)
-    {
-        switch (side)
-        {
-            case DmSide.Idol: return DmEntryKind.Incoming;
-            case DmSide.Player: return DmEntryKind.Outgoing;
-            case DmSide.System: return DmEntryKind.System;
-            default: return DmEntryKind.System;
-        }
     }
 }
