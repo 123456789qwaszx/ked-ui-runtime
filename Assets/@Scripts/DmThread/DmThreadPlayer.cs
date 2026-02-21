@@ -13,15 +13,6 @@ public sealed class DmThreadPlayer
         Completed = 4,
     }
 
-    public State CurrentState => _state;
-
-    public bool AutoEnabled => _autoEnabled;
-    public float AutoDelaySeconds
-    {
-        get => _autoDelaySeconds;
-        set => _autoDelaySeconds = Mathf.Max(0f, value);
-    }
-
     public event Action<DmResultEvent> OnResult; // Completed / ChoiceSelected
 
     private readonly DmThreadPanel _panel;
@@ -34,18 +25,14 @@ public sealed class DmThreadPlayer
 
     private bool _inputBlocked;
 
-    // Waiting for typing completion
-    private DmEntryView _currentTypingView;
-    private bool _lineFullyShown;
-
-    // Waiting for auto advance time
+    // Auto
     private bool _autoEnabled;
     private float _autoDelaySeconds = 1.2f;
     private float _autoCountdown;
 
-    // Current choice context
+    // Choice
     private DmChoice _activeChoice;
-    private string _activeEventId; // for results/logging
+    private string _activeEventId;
 
     public DmThreadPlayer(DmThreadPanel panel)
     {
@@ -55,42 +42,36 @@ public sealed class DmThreadPlayer
     public void SetInputBlocked(bool blocked)
     {
         _inputBlocked = blocked;
-        _panel.SetInputBlocked(blocked);
+        // 패널이 input block 정책을 갖고 있다면 여기서 전달(없으면 삭제해도 됨)
+        // _panel.SetInputBlocked(blocked);
     }
 
     public void SetAutoEnabled(bool enabled)
     {
         _autoEnabled = enabled;
-
-        // auto 켜면 즉시 타이머 갱신(현재 상태에 따라)
         if (_autoEnabled)
             _autoCountdown = _autoDelaySeconds;
     }
 
-    public void Start(in DmScript script, bool clearUi = true)
+    public void StartDm(DmScript script, bool clearUi = true)
     {
         _script = script;
 
-        BuildIndex();
-
         _cursor = 0;
         _state = State.Playing;
-
-        _lineFullyShown = true;
-        _currentTypingView = null;
 
         _activeChoice = default;
         _activeEventId = null;
 
         _autoCountdown = _autoDelaySeconds;
 
+        BuildIndex();
+
         if (clearUi)
             _panel.ClearThread();
 
         _panel.Show(true);
-        _panel.ShowChoices(false, null, null);
 
-        // 첫 이벤트 즉시 실행
         Step();
     }
 
@@ -102,7 +83,6 @@ public sealed class DmThreadPlayer
         if (!_autoEnabled || _inputBlocked)
             return;
 
-        // auto는 "대기 상태"에서만 의미 있음
         if (_state == State.WaitingTap)
         {
             _autoCountdown -= unscaledDeltaTime;
@@ -114,9 +94,6 @@ public sealed class DmThreadPlayer
         }
     }
 
-    /// <summary>
-    /// 사용자 탭/다음 입력
-    /// </summary>
     public void RequestAdvance()
     {
         if (_inputBlocked) return;
@@ -124,37 +101,20 @@ public sealed class DmThreadPlayer
         switch (_state)
         {
             case State.WaitingTap:
-                // 라인이 아직 타이핑 중이면 즉시 완료
-                if (!_lineFullyShown && _currentTypingView)
-                {
-                    _currentTypingView.ForceCompleteTyping();
-                    OnLineFullyShownInternal();
-                    return;
-                }
-
-                // 다음으로 진행
                 _state = State.Playing;
                 Step();
                 break;
 
             case State.Playing:
-                // Play중에 들어온 탭은 "현재 라인 타이핑 완료"로 처리할 수 있음
-                if (!_lineFullyShown && _currentTypingView)
-                {
-                    _currentTypingView.ForceCompleteTyping();
-                    OnLineFullyShownInternal();
-                }
+                // 진행 중 탭은 무시(원하면 여기서 "빠른 넘김" 정책을 추가)
                 break;
 
             case State.WaitingChoice:
-                // 선택지 상태에서는 탭은 무시(선택 버튼 사용)
+                // 선택지 상태에서는 탭 무시
                 break;
         }
     }
 
-    /// <summary>
-    /// 패널 선택지 버튼 입력(0..N-1)
-    /// </summary>
     public void ChooseOption(int index)
     {
         if (_inputBlocked) return;
@@ -166,13 +126,10 @@ public sealed class DmThreadPlayer
         var opt = opts[index];
         OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.ChoiceSelected, _activeEventId, opt.id));
 
-        _panel.ShowChoices(false, null, null);
-
-        // 분기
         if (!string.IsNullOrEmpty(opt.gotoEventId) && _eventIndexById.TryGetValue(opt.gotoEventId, out int target))
             _cursor = target;
         else
-            _cursor++; // 다음 이벤트로
+            _cursor++;
 
         _state = State.Playing;
         Step();
@@ -192,7 +149,7 @@ public sealed class DmThreadPlayer
         {
             var e = _script.events[i];
             if (string.IsNullOrEmpty(e.id)) continue;
-            if (_eventIndexById.ContainsKey(e.id)) continue; // 중복은 무시
+            if (_eventIndexById.ContainsKey(e.id)) continue; // 중복 방지
             _eventIndexById.Add(e.id, i);
         }
     }
@@ -205,25 +162,24 @@ public sealed class DmThreadPlayer
             return;
         }
 
-        var e = _script.events[_cursor];
-        _activeEventId = e.id;
+        var dmEvent = _script.events[_cursor];
+        _activeEventId = dmEvent.id;
 
-        switch (e.kind)
+        switch (dmEvent.kind)
         {
             case DmEventKind.Line:
-                PlayLine(e.id, e.line);
+                PlayLine(dmEvent.id, dmEvent.line);
                 break;
 
             case DmEventKind.Marker:
-                PlayMarker(e.id, e.marker);
+                PlayMarker(dmEvent.id, dmEvent.marker);
                 break;
 
             case DmEventKind.Choice:
-                ShowChoice(e.id, e.choice);
+                ShowChoice(dmEvent.id, dmEvent.choice);
                 break;
 
             default:
-                // 알 수 없는 이벤트는 스킵
                 _cursor++;
                 Step();
                 break;
@@ -232,13 +188,12 @@ public sealed class DmThreadPlayer
 
     private void PlayMarker(string eventId, in DmMarker marker)
     {
-        var text = marker.label ?? "";
+        string text = marker.label ?? "";
         var model = new DmEntryModel(DmEntryKind.System, "", text);
 
         _panel.AppendEntry(model);
-        _panel.ScrollToBottom(immediate: false);
+        _panel.ScrollToBottom();
 
-        // marker는 기본적으로 탭 대기 없이 진행(원하면 wait 정책 추가 가능)
         _cursor++;
         Step();
     }
@@ -246,65 +201,27 @@ public sealed class DmThreadPlayer
     private void PlayLine(string eventId, in DmLine line)
     {
         var kind = ConvertKind(line.side);
-        var name = line.speaker ?? "";
-        var text = line.text ?? "";
+        string name = line.speaker ?? "";
+        string text = line.text ?? "";
 
         var model = new DmEntryModel(kind, name, text);
-        var view = _panel.AppendEntry(model);
+        _panel.AppendEntry(model);
 
-        _panel.ScrollToBottom(immediate: false);
+        _panel.ScrollToBottom();
 
-        _currentTypingView = view;
-        _lineFullyShown = true;
-
-        float typing = Mathf.Max(0f, line.typingSeconds);
         bool waitForTap = line.waitForTap;
 
-        if (view && typing > 0f)
+        if (waitForTap)
         {
-            _lineFullyShown = false;
-
-            // 타이핑 완료 신호를 받아서 상태 전환
-            view.PlayTyping(typing, OnLineFullyShownInternal);
-        }
-
-        // 라인이 즉시 표시되었거나, 타이핑 완료 후에는 wait 정책 적용
-        if (_lineFullyShown)
-        {
-            if (waitForTap)
-            {
-                _state = State.WaitingTap;
-                _autoCountdown = _autoDelaySeconds;
-            }
-            else
-            {
-                _cursor++;
-                _state = State.Playing;
-                Step();
-            }
-        }
-        else
-        {
-            // 타이핑 중에는 일단 탭대기 상태로 둠 (탭하면 즉시 완료 처리)
             _state = State.WaitingTap;
             _autoCountdown = _autoDelaySeconds;
         }
-    }
-
-    private void OnLineFullyShownInternal()
-    {
-        _lineFullyShown = true;
-
-        // 타이핑이 끝났는데, 라인이 waitForTap=false였으면 자동으로 진행하고 싶을 수 있음
-        // 여기서는 "현재 이벤트를 다시 읽어서 정책 적용" 대신,
-        // 가장 안전한 방식으로: 현재 라인이 waitForTap=true라는 가정(기본) + 탭/오토로 넘어가게 둔다.
-        // 만약 waitForTap=false 라인도 쓰고 싶으면, 아래처럼 정책을 추가할 수 있음:
-        //
-        // - DmLine.waitForTap=false이면 타이핑 완료 즉시 다음 이벤트로 진행
-        //
-        // 이를 위해선 현재 line의 waitForTap을 저장해야 함.
-        //
-        // 지금은 기본 정책(대부분 waitForTap=true)으로 단순 유지.
+        else
+        {
+            _cursor++;
+            _state = State.Playing;
+            Step();
+        }
     }
 
     private void ShowChoice(string eventId, in DmChoice choice)
@@ -314,15 +231,15 @@ public sealed class DmThreadPlayer
         string prompt = choice.prompt;
         string[] opts = BuildChoiceTexts(choice.options);
 
-        _panel.ShowChoices(true, prompt, opts);
-        _panel.ScrollToBottom(immediate: false);
+        _panel.ScrollToBottom();
 
         _state = State.WaitingChoice;
     }
 
     private static string[] BuildChoiceTexts(DmChoiceOption[] options)
     {
-        if (options == null) return Array.Empty<string>();
+        if (options == null)
+            return Array.Empty<string>();
 
         int n = Mathf.Min(options.Length, 5);
         var arr = new string[n];
@@ -334,8 +251,6 @@ public sealed class DmThreadPlayer
     private void Complete()
     {
         _state = State.Completed;
-
-        _panel.ShowChoices(false, null, null);
 
         OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.Completed, _activeEventId ?? "", ""));
     }

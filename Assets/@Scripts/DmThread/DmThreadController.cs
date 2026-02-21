@@ -5,10 +5,6 @@ public sealed class DmThreadController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private DmThreadPanel panel;
 
-    [Header("Auto")]
-    [SerializeField] private bool autoEnabled = false;
-    [SerializeField] private float autoDelaySeconds = 1.2f;
-
     private DmThreadPlayer _player;
 
     private void Awake()
@@ -21,11 +17,6 @@ public sealed class DmThreadController : MonoBehaviour
         }
 
         _player = new DmThreadPlayer(panel);
-        _player.SetAutoEnabled(autoEnabled);
-        _player.AutoDelaySeconds = autoDelaySeconds;
-
-        panel.OnChoiceOptionSelected -= HandleChoiceSelected;
-        panel.OnChoiceOptionSelected += HandleChoiceSelected;
     }
 
     private void Update()
@@ -45,10 +36,8 @@ public sealed class DmThreadController : MonoBehaviour
     // 외부에서 시작시키기
     public void Play(DmScript script, bool clearUi = true)
     {
-        _player.Start(script, clearUi);
+        _player.StartDm(script, clearUi);
     }
 
     public void RequestAdvance() => _player.RequestAdvance();
-    public void SetAuto(bool enabled) => _player.SetAutoEnabled(enabled);
-    public void SetInputBlocked(bool blocked) => _player.SetInputBlocked(blocked);
 }
