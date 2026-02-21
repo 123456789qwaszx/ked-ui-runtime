@@ -5,6 +5,7 @@ public enum DmEventKind : byte
     Line = 0,
     Choice = 1,
     Marker = 2,
+    Emoji = 3,
 }
 
 [Serializable]
@@ -24,13 +25,21 @@ public struct DmEvent
     public DmLine line;
     public DmChoice choice;
     public DmMarker marker;
+    public DmEmoji emoji;
+}
+
+public enum DmEntryKind : byte
+{
+    Incoming = 0,   // 상대
+    Outgoing = 1,   // 나
+    System = 2,     // 구분선/공지
 }
 
 [Serializable]
 public struct DmLine
 {
     public DmEntryKind kind;   // Incoming/Outgoing/System
-    public string speaker;     // "라비" / "나" / ""(system)
+    public string speaker;     // "상대" / "나" / ""(system)
     public string text;
 }
 
@@ -55,45 +64,10 @@ public struct DmMarker
     public string label;           // 날짜/구분선 텍스트
 }
 
-public enum DmEntryKind : byte
+[Serializable]
+public struct DmEmoji
 {
-    Incoming = 0,   // 라비
-    Outgoing = 1,   // 나
-    System = 2,     // 구분선/공지
-}
-
-public readonly struct DmEntryModel
-{
-    public readonly DmEntryKind Kind;
-    public readonly string Name;
-    public readonly string Text;
-
-    public DmEntryModel(DmEntryKind kind, string name, string text)
-    {
-        Kind = kind;
-        Name = name;
-        Text = text;
-    }
-}
-
-public enum DmResultKind : byte
-{
-    Completed = 0,
-    ChoiceSelected = 1,
-}
-
-public readonly struct DmResultEvent
-{
-    public readonly string ThreadId;
-    public readonly DmResultKind Kind;
-    public readonly string EventId;
-    public readonly string ChoiceId;
-
-    public DmResultEvent(string threadId, DmResultKind kind, string eventId, string choiceId)
-    {
-        ThreadId = threadId;
-        Kind = kind;
-        EventId = eventId;
-        ChoiceId = choiceId;
-    }
+    public DmEntryKind kind;  // Incoming/Outgoing (System이면 그냥 텍스트로 처리해도 됨)
+    public string speaker;    // optional
+    public string emojiId;    // "smile", "heart", "sticker_02" 같은 키
 }

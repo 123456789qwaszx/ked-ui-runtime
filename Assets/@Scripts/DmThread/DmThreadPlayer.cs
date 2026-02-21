@@ -2,6 +2,28 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum DmResultKind : byte
+{
+    Completed = 0,
+    ChoiceSelected = 1,
+}
+
+public readonly struct DmResultEvent
+{
+    public readonly string ThreadId;
+    public readonly DmResultKind Kind;
+    public readonly string EventId;
+    public readonly string ChoiceId;
+
+    public DmResultEvent(string threadId, DmResultKind kind, string eventId, string choiceId)
+    {
+        ThreadId = threadId;
+        Kind = kind;
+        EventId = eventId;
+        ChoiceId = choiceId;
+    }
+}
+
 public sealed class DmThreadPlayer
 {
     public enum State : byte
@@ -130,6 +152,10 @@ public sealed class DmThreadPlayer
                     _cursor++;
                     ShowChoice(dmEvent.choice);
                     return;
+                case DmEventKind.Emoji:
+                    _cursor++;
+                    PlayEmoji(dmEvent.emoji);
+                    return;
                 
                 default:
                     _cursor++;
@@ -148,8 +174,6 @@ public sealed class DmThreadPlayer
 
         _panel.AppendEntry(model);
         _panel.ScrollToBottom();
-
-        _cursor++;
     }
 
     private void PlayLine(DmLine line)
@@ -163,7 +187,23 @@ public sealed class DmThreadPlayer
         _panel.AppendEntry(model);
         _panel.ScrollToBottom();
 
-        _cursor++;
+        _state = State.WaitingTap;
+    }
+    
+    private void PlayEmoji(DmEmoji emoji)
+    {
+        string name = emoji.speaker ?? "";
+        string text = string.IsNullOrEmpty(emoji.emojiId) ? "" : $":{emoji.emojiId}:";
+
+        var model = new DmEntryModel(
+            emoji.kind,
+            name,
+            text
+        );
+
+        _panel.AppendEntry(model);
+        _panel.ScrollToBottom();
+
         _state = State.WaitingTap;
     }
 
@@ -191,4 +231,6 @@ public sealed class DmThreadPlayer
         
         return arr;
     }
+    
+    
 }

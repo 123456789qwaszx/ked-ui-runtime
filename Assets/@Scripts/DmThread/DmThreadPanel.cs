@@ -3,6 +3,21 @@ using UnityEngine;
 using UnityEngine.UI;
 using static UIRefValidation;
 
+
+public readonly struct DmEntryModel
+{
+    public readonly DmEntryKind Kind;
+    public readonly string Name;
+    public readonly string Text;
+
+    public DmEntryModel(DmEntryKind kind, string name, string text)
+    {
+        Kind = kind;
+        Name = name;
+        Text = text;
+    }
+}
+
 public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
 {
     #region Refs
@@ -58,27 +73,36 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
     private readonly List<DmEntryView> _active = new();
     private bool _valid;
     
-    public void AppendEntry(DmEntryModel model)
+    public DmEntryView AppendEntry(in DmEntryModel model)
     {
-        if (!_valid) 
-            return;
+        if (!_valid)
+            return null;
 
         DmEntryView template = model.Kind switch
         {
             DmEntryKind.Incoming => tplIncoming,
             DmEntryKind.Outgoing => tplOutgoing,
-            DmEntryKind.System   => tplSystem,
-            _                    => tplIncoming,
+            DmEntryKind.System => tplSystem,
+            _ => tplIncoming,
         };
+
+        if (!template || !_content)
+            return null;
 
         GameObject go = Instantiate(template.gameObject);
         DmEntryView view = go.GetComponent<DmEntryView>();
+        if (!view)
+        {
+            Destroy(go);
+            return null;
+        }
 
         view.transform.SetParent(_content, worldPositionStays: false);
 
-        view.Kind = model.Kind;
+        view.Present(model);
 
         _active.Add(view);
+        return view;
     }
 
     public void ClearThread()

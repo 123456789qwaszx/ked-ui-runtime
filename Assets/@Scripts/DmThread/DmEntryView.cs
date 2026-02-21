@@ -4,10 +4,16 @@ using UnityEngine;
 public sealed class DmEntryView : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private RectTransform root;     // optional
-    [SerializeField] private TMP_Text nameText;      // optional
-    [SerializeField] private TMP_Text bodyText;      // required
-    [SerializeField] private TMP_Text timeText;      // optional
+    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text bodyText;
 
     public DmEntryKind Kind { get; set; }
+    
+    public void Present(DmEntryModel model)
+    {
+        Kind = model.Kind;
+
+        if (nameText) nameText.text = model.Name ?? "";
+        if (bodyText) bodyText.text = model.Text ?? "";
+    }
 }
