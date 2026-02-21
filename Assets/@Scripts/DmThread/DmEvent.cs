@@ -46,7 +46,7 @@ public struct DmChoiceOption
 {
     public string id;
     public string text;
-    public string gotoEventId;     // 없으면 다음으로 진행
+    public string gotoEventId; // 이 옵션 선택시 다음에 재생할 이벤트 Id. 분기, 구간 스킵, 루프 등에 활용.
 }
 
 [Serializable]

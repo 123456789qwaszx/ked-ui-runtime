@@ -23,8 +23,6 @@ public sealed class DmThreadPlayer
     private int _cursor;
     private State _state;
 
-    private bool _inputBlocked;
-
     // Choice
     private DmChoice _activeChoice;
     private string _activeEventId;
@@ -44,7 +42,20 @@ public sealed class DmThreadPlayer
         _activeChoice = default;
         _activeEventId = null;
 
-        BuildIndex();
+        _eventIndexById.Clear();
+
+        for (int i = 0; i < _script.events.Length; i++)
+        {
+            DmEvent dmEvent = _script.events[i];
+            
+            if (string.IsNullOrEmpty(dmEvent.id))
+                continue;
+            
+            if (_eventIndexById.ContainsKey(dmEvent.id))
+                continue;
+            
+            _eventIndexById.Add(dmEvent.id, i);
+        }
 
         if (clearUi)
             _panel.ClearThread();
@@ -55,8 +66,6 @@ public sealed class DmThreadPlayer
     }
     public void RequestAdvance()
     {
-        if (_inputBlocked) return;
-
         switch (_state)
         {
             case State.WaitingTap:
@@ -69,83 +78,70 @@ public sealed class DmThreadPlayer
                 break;
 
             case State.WaitingChoice:
-                // 선택지 상태에서는 탭 무시
                 break;
         }
     }
 
     public void ChooseOption(int index)
     {
-        if (_inputBlocked) return;
-        if (_state != State.WaitingChoice) return;
+        if (_state != State.WaitingChoice)
+            return;
 
-        var opts = _activeChoice.options;
-        if (opts == null || (uint)index >= (uint)opts.Length) return;
-
-        var opt = opts[index];
-        OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.ChoiceSelected, _activeEventId, opt.id));
+        DmChoiceOption[] options = _activeChoice.options;
+        DmChoiceOption opt = options[index];
+        
+        OnResult?.Invoke(
+            new DmResultEvent(
+                _script.threadId, // 어떤 Dm스레드인지
+                DmResultKind.ChoiceSelected, // 이게 선택인지, 완료인지 구분
+                _activeEventId, // 선택이 발생한 좌표: choiceId 내에 yes/no, 세이브/리플레이 시 어느 이벤트에서 선택했는지
+                opt.id)); // 실제로 어떤 옵션을 골랐는지, 토큰 부여/플래그/분기 결정의 입력값
 
         if (!string.IsNullOrEmpty(opt.gotoEventId) && _eventIndexById.TryGetValue(opt.gotoEventId, out int target))
-            _cursor = target;
+            _cursor = target; // 지정된 이벤트로 점프
         else
-            _cursor++;
+            _cursor++; // 다음 이벤트로 진행
 
         _state = State.Playing;
         Step();
     }
 
-    // --------------------
-    // Internals
-    // --------------------
-
-    private void BuildIndex()
-    {
-        _eventIndexById.Clear();
-
-        if (_script.events == null) return;
-
-        for (int i = 0; i < _script.events.Length; i++)
-        {
-            var e = _script.events[i];
-            if (string.IsNullOrEmpty(e.id)) continue;
-            if (_eventIndexById.ContainsKey(e.id)) continue; // 중복 방지
-            _eventIndexById.Add(e.id, i);
-        }
-    }
-
+    
     private void Step()
     {
-        if (_script.events == null || _cursor >= _script.events.Length)
+        while (_cursor < _script.events.Length)
         {
-            Complete();
-            return;
+            DmEvent dmEvent = _script.events[_cursor];
+            _activeEventId = dmEvent.id;
+
+            switch (dmEvent.kind)
+            {
+                case DmEventKind.Line:
+                    _cursor++;
+                    PlayLine(dmEvent.line);
+                    return;
+                
+                case DmEventKind.Marker:
+                    _cursor++;
+                    PlayMarker(dmEvent.marker);
+                    continue;
+                
+                case DmEventKind.Choice:
+                    _cursor++;
+                    ShowChoice(dmEvent.choice);
+                    return;
+                
+                default:
+                    _cursor++;
+                    continue;
+            }
         }
-
-        var dmEvent = _script.events[_cursor];
-        _activeEventId = dmEvent.id;
-
-        switch (dmEvent.kind)
-        {
-            case DmEventKind.Line:
-                PlayLine(dmEvent.id, dmEvent.line);
-                break;
-
-            case DmEventKind.Marker:
-                PlayMarker(dmEvent.id, dmEvent.marker);
-                break;
-
-            case DmEventKind.Choice:
-                ShowChoice(dmEvent.id, dmEvent.choice);
-                break;
-
-            default:
-                _cursor++;
-                Step();
-                break;
-        }
+        
+        _state = State.Completed;
+        OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.Completed, _activeEventId ?? "", ""));
     }
 
-    private void PlayMarker(string eventId, in DmMarker marker)
+    private void PlayMarker(DmMarker marker)
     {
         string text = marker.label ?? "";
         var model = new DmEntryModel(DmEntryKind.System, "", text);
@@ -154,10 +150,9 @@ public sealed class DmThreadPlayer
         _panel.ScrollToBottom();
 
         _cursor++;
-        Step();
     }
 
-    private void PlayLine(string eventId, in DmLine line)
+    private void PlayLine(DmLine line)
     {
         var model = new DmEntryModel(
             line.kind,
@@ -169,11 +164,10 @@ public sealed class DmThreadPlayer
         _panel.ScrollToBottom();
 
         _cursor++;
-        _state = State.Playing;
-        Step();
+        _state = State.WaitingTap;
     }
 
-    private void ShowChoice(string eventId, in DmChoice choice)
+    private void ShowChoice(DmChoice choice)
     {
         _activeChoice = choice;
 
@@ -194,13 +188,7 @@ public sealed class DmThreadPlayer
         var arr = new string[n];
         for (int i = 0; i < n; i++)
             arr[i] = options[i].text ?? "";
+        
         return arr;
-    }
-
-    private void Complete()
-    {
-        _state = State.Completed;
-
-        OnResult?.Invoke(new DmResultEvent(_script.threadId, DmResultKind.Completed, _activeEventId ?? "", ""));
     }
 }
