@@ -37,7 +37,7 @@ public sealed class DmThreadPlayer
 
     public event Action<DmResultEvent> OnResult; // Completed / ChoiceSelected
 
-    private readonly DmThreadPanel _panel;
+    private DmThreadPanel _panel;
 
     private DmScript _script;
     private readonly Dictionary<string, int> _eventIndexById = new();
@@ -45,13 +45,20 @@ public sealed class DmThreadPlayer
     private int _cursor;
     private State _state;
 
-    // Choice
     private DmChoice _activeChoice;
     private string _activeEventId;
+    
+    private DmChoiceView _activeChoiceView;
 
-    public DmThreadPlayer(DmThreadPanel panel)
+    private bool _init;
+    public void Initialize(DmThreadPanel panel)
     {
+        if (_init)
+            return;
+        
         _panel = panel;
+
+        _init = true;
     }
 
     public void StartDm(DmScript script, bool clearUi = true)
@@ -111,6 +118,10 @@ public sealed class DmThreadPlayer
 
         DmChoiceOption[] options = _activeChoice.options;
         DmChoiceOption opt = options[index];
+        
+        if (_activeChoiceView)
+            _activeChoiceView.Lock();
+        _activeChoiceView = null;
         
         OnResult?.Invoke(
             new DmResultEvent(
@@ -211,26 +222,9 @@ public sealed class DmThreadPlayer
     {
         _activeChoice = choice;
 
-        string prompt = choice.prompt;
-        string[] opts = BuildChoiceTexts(choice.options);
-
+        _activeChoiceView = _panel.AppendChoice(choice, ChooseOption);
         _panel.ScrollToBottom();
 
         _state = State.WaitingChoice;
     }
-
-    private static string[] BuildChoiceTexts(DmChoiceOption[] options)
-    {
-        if (options == null)
-            return Array.Empty<string>();
-
-        int n = Mathf.Min(options.Length, 5);
-        var arr = new string[n];
-        for (int i = 0; i < n; i++)
-            arr[i] = options[i].text ?? "";
-        
-        return arr;
-    }
-    
-    
 }

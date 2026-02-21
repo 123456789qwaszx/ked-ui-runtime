@@ -39,4 +39,15 @@ public sealed class DmChoiceView : MonoBehaviour
             optionTexts[i].text = options[i].text ?? "";
         }
     }
+
+    public void Lock()
+    {
+        if (optionButtons == null) return;
+
+        for (int i = 0; i < optionButtons.Length; i++)
+        {
+            if (!optionButtons[i]) continue;
+            optionButtons[i].interactable = false;
+        }
+    }
 }

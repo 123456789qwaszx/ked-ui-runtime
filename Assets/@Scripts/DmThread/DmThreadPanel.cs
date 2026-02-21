@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -69,14 +70,15 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
     [SerializeField] private DmEntryView tplIncoming;
     [SerializeField] private DmEntryView tplOutgoing;
     [SerializeField] private DmEntryView tplSystem;
+    
+    [SerializeField] private DmChoiceView tplChoice;
 
-    private readonly List<DmEntryView> _active = new();
+    private readonly List<GameObject> _activeEntries = new();
     private bool _valid;
     
     public DmEntryView AppendEntry(in DmEntryModel model)
     {
-        if (!_valid)
-            return null;
+        if (!_valid) return null;
 
         DmEntryView template = model.Kind switch
         {
@@ -86,22 +88,29 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
             _ => tplIncoming,
         };
 
-        if (!template || !_content)
-            return null;
 
         GameObject go = Instantiate(template.gameObject);
         DmEntryView view = go.GetComponent<DmEntryView>();
-        if (!view)
-        {
-            Destroy(go);
-            return null;
-        }
 
-        view.transform.SetParent(_content, worldPositionStays: false);
+        view.transform.SetParent(_content);
 
         view.Present(model);
 
-        _active.Add(view);
+        _activeEntries.Add(go);
+        return view;
+    }
+    
+    public DmChoiceView AppendChoice(in DmChoice choice, Action<int> onPick)
+    {
+        if (!_valid) return null;
+
+        GameObject go = Instantiate(tplChoice.gameObject);
+        var view = go.GetComponent<DmChoiceView>();
+
+        view.transform.SetParent(_content);
+        view.Present(choice, onPick);
+
+        _activeEntries.Add(go);
         return view;
     }
 
@@ -109,13 +118,13 @@ public sealed class DmThreadPanel : UIBase<DmThreadPanel.Refs>, IUIPanel
     {
         if (!_valid) return;
 
-        for (int i = 0; i < _active.Count; i++)
+        for (int i = 0; i < _activeEntries.Count; i++)
         {
-            var entry = _active[i];
+            var entry = _activeEntries[i];
             if (entry) Destroy(entry.gameObject);
         }
 
-        _active.Clear();
+        _activeEntries.Clear();
         ScrollToBottom();
     }
     
